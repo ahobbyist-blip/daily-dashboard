@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Daily Command Center</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --success-bg: #14532d;
+            --category-color: #cbd5e1;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 70px; /* Space for floating button */
+        }
+
+        .page {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        .category-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .category-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--category-color);
+            border-bottom: 2px solid #334155;
+            padding-bottom: 4px;
+            margin: 0;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .card-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+            body {
+                padding: 20px;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            color: var(--accent);
+            border-bottom: 1px solid #334155;
+            padding-bottom: 6px;
+        }
+
+        .weather-info, .finance-info, .pollen-info {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .highlight {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .action-btn {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 14px 20px; /* Larger touch target for mobile */
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.completed {
+            background-color: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success);
+            cursor: default;
+        }
+
+        .tracker-stats {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .input-group button {
+            width: auto;
+            padding: 12px 18px;
+            margin-top: 0;
+        }
+
+        .clock-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .clock-box {
+            flex: 1;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .clock-time {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 4px;
+        }
+        
+        .date-display {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .fitness-list {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 0 0 10px 0;
+            line-height: 1.5;
+        }
+
+        .pollen-level-low { color: #22c55e; font-weight: bold; }
+        .pollen-level-moderate { color: #eab308; font-weight: bold; }
+        .pollen-level-high { color: #ef4444; font-weight: bold; }
+
+        /* Shopping Page Specific Styles */
+        .shopping-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .shopping-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            border: 1px solid #334155;
+        }
+
+        .shopping-item.checked span {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .shopping-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .shopping-item input[type="checkbox"] {
+            accent-color: var(--accent);
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .delete-item-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px 8px;
+        }
+
+        .delete-item-btn:hover {
+            color: var(--danger);
+        }
+
+        /* Floating Nav Button Optimized for Mobile Thumbs */
+        .float-btn {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- PAGE 1: DASHBOARD MAIN -->
+        <div id="mainPage" class="page active">
+
+            <!-- CATEGORY: OVERVIEW & TIME -->
+            <div class="category-section">
+                <h2 class="category-title">Overview & Time</h2>
+                <div class="card-grid">
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <h3>🕒 World Clocks & Date</h3>
+                        <div class="clock-container">
+                            <div class="clock-box">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Local Time</div>
+                                <div class="clock-time" id="localClock">--:--:--</div>
+                            </div>
+                            <div class="clock-box">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">India (IST)</div>
+                                <div class="clock-time" id="indiaClock">--:--:--</div>
+                            </div>
+                        </div>
+                        <div class="date-display" id="dateDisplay">Loading date...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY: ENVIRONMENT & FINANCE -->
+            <div class="category-section">
+                <h2 class="category-title">Environment & Finance</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>🌤️ Weather & Recommendations</h3>
+                        <div class="weather-info">
+                            <span class="highlight" id="currentTemp">--°C</span> (Current)<br>
+                            High: <strong id="highTemp">--°C</strong><br>
+                            Low: <strong id="lowTemp">--°C</strong>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid #334155; margin: 12px 0;">
+                        <div id="weatherAdvice" style="font-size: 0.85rem; color: var(--text-muted);">
+                            Analyzing weather conditions...
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🌿 Pollen Levels</h3>
+                        <div class="pollen-info">
+                            Status: <span id="pollenStatus" class="highlight" style="font-size: 1.1rem;">Checking...</span><br>
+                            • Birch / Alder: <span id="pollenBirch">--</span><br>
+                            • Grasses: <span id="pollenGrass">--</span><br>
+                            • Ragweed: <span id="pollenRagweed">--</span>
+                        </div>
+                        <div class="tracker-stats" id="pollenAdvice">Live air quality lookup</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>💱 Currency (EUR to INR)</h3>
+                        <div class="finance-info">
+                            Current Rate: <br>
+                            <span class="highlight" id="eurInrRate">Loading...</span>
+                        </div>
+                        <div class="tracker-stats">Updates live via API</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY: DAILY HABITS & PRODUCTIVITY -->
+            <div class="category-section">
+                <h2 class="category-title">Habits & Productivity</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>💊 Daily Supplements</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Status: Pending intake</p>
+                        <button id="supplementsBtn" class="action-btn" onclick="completeSupplements()">Take Supplements</button>
+                        <div class="tracker-stats" id="supplementsStats">🔥 Streak: 0 days</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>💼 Job Applications</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Log jobs applied for today</p>
+                        <div class="input-group" id="jobInputSection">
+                            <input type="number" id="jobCountInput" min="1" placeholder="e.g., 3" value="1">
+                            <button class="action-btn" style="margin-top:0;" onclick="logJobs()">Log</button>
+                        </div>
+                        <div id="jobStatusMsg" style="display:none; text-align:center; color: var(--success); font-weight: bold; margin-top: 10px;">✓ Logged Today</div>
+                        <div class="tracker-stats" id="jobStats">Total Applied: 0 | 🔥 Streak: 0 days</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📚 Project Reader</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Daily reading session</p>
+                        <button id="readerBtn" class="action-btn" onclick="completeReader()">Read Today</button>
+                        <div class="tracker-stats" id="readerStats">Tracked: 0 / 61 days (Aug - Sept)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY: FITNESS -->
+            <div class="category-section">
+                <h2 class="category-title">Fitness</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>💪 Daily Fitness Circuit</h3>
+                        <div class="fitness-list">
+                            • Push-ups: <span id="pushupTarget" style="color: #fff; font-weight: bold;">10</span> reps<br>
+                            • Squats: <span id="squatTarget" style="color: #fff; font-weight: bold;">15</span> reps<br>
+                            • Leg Raises: <span id="legRaiseTarget" style="color: #fff; font-weight: bold;">12</span> reps<br>
+                            • Climbs: <span id="climbTarget" style="color: #fff; font-weight: bold;">20</span> reps<br>
+                            • Planks: <span id="plankTarget" style="color: #fff; font-weight: bold;">45</span> sec
+                        </div>
+                        <button id="pushupBtn" class="action-btn" onclick="completePushups()">Mark Circuit Done</button>
+                        <div class="tracker-stats" id="pushupStats">Tracked: 0 / 61 days (Aug - Sept)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY: SHOPPING OVERVIEW -->
+            <div class="category-section">
+                <h2 class="category-title">Shopping Overview</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>🛒 Shopping Summary</h3>
+                        <div class="finance-info">
+                            Items to Buy: <br>
+                            <span class="highlight" id="shoppingCountDashboard">0 items</span>
+                        </div>
+                        <button class="action-btn" onclick="togglePage()" style="margin-top: 15px;">Open Shopping List</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PAGE 2: SHOPPING LIST PAGE -->
+        <div id="shoppingPage" class="page">
+            <div class="category-section">
+                <h2 class="category-title">Shopping Management</h2>
+                <div class="card" style="width: 100%;">
+                    <h3>🛒 Grocery & Shopping List</h3>
+                    <ul class="shopping-list" id="shoppingListContainer">
+                        <!-- Items rendered via JS -->
+                    </ul>
+                    <div class="input-group">
+                        <input type="text" id="newItemInput" placeholder="Add new item..." onkeypress="handleShoppingKey(event)">
+                        <button class="action-btn" style="margin-top:0;" onclick="addShoppingItem()">Add</button>
+                    </div>
+                    <div class="tracker-stats" style="margin-top: 15px;">Checked items auto-delete after 24 hours</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FLOATING NAVIGATION BUTTON -->
+    <button class="float-btn" id="navFloatBtn" onclick="togglePage()">🛒 Shopping List</button>
+
+    <script>
+        // --- PAGE ROUTING / TOGGLE ---
+        let currentPage = 'main';
+
+        function togglePage() {
+            const mainPage = document.getElementById('mainPage');
+            const shoppingPage = document.getElementById('shoppingPage');
+            const floatBtn = document.getElementById('navFloatBtn');
+
+            if (currentPage === 'main') {
+                mainPage.classList.remove('active');
+                shoppingPage.classList.add('active');
+                floatBtn.innerHTML = '🏠 Dashboard';
+                currentPage = 'shopping';
+                renderShoppingList();
+            } else {
+                shoppingPage.classList.remove('active');
+                mainPage.classList.add('active');
+                floatBtn.innerHTML = '🛒 Shopping List';
+                currentPage = 'main';
+                updateDashboardShoppingCount();
+            }
+        }
+
+        // --- 0. CLOCKS & DATE FORMATTER ---
+        function updateClocksAndDate() {
+            const now = new Date();
+            document.getElementById('localClock').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+            
+            const optionsIST = { timeZone: 'Asia/Kolkata', timeStyle: 'medium', hour12: false };
+            document.getElementById('indiaClock').innerText = new Intl.DateTimeFormat('en-GB', optionsIST).format(now);
+
+            document.getElementById('dateDisplay').innerText = now.toLocaleDateString('en-GB', { 
+                weekday: 'long', 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+        }
+        setInterval(updateClocksAndDate, 1000);
+        updateClocksAndDate();
+
+        // --- 1. LIVE WEATHER & POLLEN FETCH ---
+        async function fetchEnvironmentData() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    getWeatherData(position.coords.latitude, position.coords.longitude);
+                    getPollenData(position.coords.latitude, position.coords.longitude);
+                }, () => {
+                    getWeatherData(53.5511, 9.9937); 
+                    getPollenData(53.5511, 9.9937);
+                });
+            } else {
+                getWeatherData(53.5511, 9.9937);
+                getPollenData(53.5511, 9.9937);
+            }
+        }
+
+        async function getWeatherData(lat, lon) {
+            try {
+                let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+                let response = await fetch(url);
+                let data = await response.json();
+
+                let currentTemp = Math.round(data.current.temperature_2m);
+                let highTemp = Math.round(data.daily.temperature_2m_max[0]);
+                let lowTemp = Math.round(data.daily.temperature_2m_min[0]);
+                let precipitation = data.current.precipitation;
+
+                document.getElementById('currentTemp').innerText = `${currentTemp}°C`;
+                document.getElementById('highTemp').innerText = `${highTemp}°C`;
+                document.getElementById('lowTemp').innerText = `${lowTemp}°C`;
+
+                generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation);
+            } catch (error) {
+                document.getElementById('weatherAdvice').innerText = 'Could not load live weather.';
+            }
+        }
+
+        async function getPollenData(lat, lon) {
+            try {
+                let url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=grass_pollen,birch_pollen,ragweed_pollen&timezone=auto`;
+                let response = await fetch(url);
+                let data = await response.json();
+
+                let birch = data.current.birch_pollen ?? 0;
+                let grass = data.current.grass_pollen ?? 0;
+                let ragweed = data.current.ragweed_pollen ?? 0;
+
+                document.getElementById('pollenBirch').innerText = `${Math.round(birch)} grains/m³`;
+                document.getElementById('pollenGrass').innerText = `${Math.round(grass)} grains/m³`;
+                document.getElementById('pollenRagweed').innerText = `${Math.round(ragweed)} grains/m³`;
+
+                let maxVal = Math.max(birch, grass, ragweed);
+                let statusEl = document.getElementById('pollenStatus');
+                let adviceEl = document.getElementById('pollenAdvice');
+
+                if (maxVal < 10) {
+                    statusEl.innerText = "Low / Clean";
+                    statusEl.className = "highlight pollen-level-low";
+                    adviceEl.innerText = "Safe for outdoor activities.";
+                } else if (maxVal >= 10 && maxVal < 50) {
+                    statusEl.innerText = "Moderate";
+                    statusEl.className = "highlight pollen-level-moderate";
+                    adviceEl.innerText = "Mild allergy precautions advised.";
+                } else {
+                    statusEl.innerText = "High Pollen Alert";
+                    statusEl.className = "highlight pollen-level-high";
+                    adviceEl.innerText = "Keep windows closed & take antihistamines!";
+                }
+            } catch (error) {
+                document.getElementById('pollenStatus').innerText = "Unavailable";
+                document.getElementById('pollenAdvice').innerText = "Could not fetch air quality API.";
+            }
+        }
+        fetchEnvironmentData();
+
+        function generateSmartAdvice(current, high, low, rain) {
+            let wearText = "";
+            let carryText = "";
+            let blindsText = "";
+
+            if (current < 5) {
+                wearText = "🧥 Winter wear: Heavy coat, beanie, thermal layers.";
+            } else if (current >= 5 && current < 15) {
+                wearText = "🧥 Jacket / Sweater recommended.";
+            } else if (current >= 15 && current < 22) {
+                wearText = "👕 Light jacket or hoodie.";
+            } else {
+                wearText = "👕 T-shirt weather. Cap recommended if sunny.";
+            }
+
+            if (rain > 0) {
+                carryText = "🌂 Carry an umbrella (active precipitation).";
+            } else {
+                carryText = "🌂 No umbrella needed.";
+            }
+
+            if (high > 24) {
+                blindsText = "🪟 Keep window blinds closed to block heat.";
+            } else {
+                blindsText = "🪟 Keep window blinds open for natural warmth.";
+            }
+
+            document.getElementById('weatherAdvice').innerHTML = `
+                ${wearText}<br>
+                ${carryText}<br>
+                ${blindsText}
+            `;
+        }
+
+        // --- 2. CURRENCY FETCH ---
+        async function fetchExchangeRate() {
+            try {
+                let response = await fetch('https://open.er-api.com/v6/latest/EUR');
+                let data = await response.json();
+                let rate = data.rates.INR.toFixed(2);
+                document.getElementById('eurInrRate').innerText = `₹${rate}`;
+            } catch (error) {
+                document.getElementById('eurInrRate').innerText = '₹90.50 (Cached)';
+            }
+        }
+        fetchExchangeRate();
+
+        // --- 3. DYNAMIC FITNESS TARGETS ---
+        function getDailyFitnessTargets() {
+            const startDate = new Date(new Date().getFullYear(), 7, 1);
+            const today = new Date();
+            const diffTime = Math.abs(today - startDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            let pushups = 10 + ((diffDays % 6) * 3); 
+            if (pushups > 25) pushups = 25;
+
+            let squats = 15 + ((diffDays % 6) * 3); 
+            if (squats > 30) squats = 30;
+
+            let legRaises = 12 + ((diffDays % 6) * 2); 
+            if (legRaises > 24) legRaises = 24;
+
+            let climbs = 20 + ((diffDays % 6) * 4); 
+            if (climbs > 40) climbs = 40;
+
+            let planks = 45 + ((diffDays % 6) * 5); 
+            if (planks > 75) planks = 75;
+
+            return { pushups, squats, legRaises, climbs, planks };
+        }
+
+        const targets = getDailyFitnessTargets();
+        document.getElementById('pushupTarget').innerText = targets.pushups;
+        document.getElementById('squatTarget').innerText = targets.squats;
+        document.getElementById('legRaiseTarget').innerText = targets.legRaises;
+        document.getElementById('climbTarget').innerText = targets.climbs;
+        document.getElementById('plankTarget').innerText = targets.planks + 's';
+
+        // --- 4. SHOPPING LIST LOGIC ---
+        let shoppingList = JSON.parse(localStorage.getItem('shoppingList') || '[]');
+
+        function cleanShoppingList() {
+            const now = new Date().getTime();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            
+            shoppingList = shoppingList.filter(item => {
+                if (!item.checked || !item.checkedAt) return true;
+                return (now - item.checkedAt) < oneDayMs;
+            });
+            saveShoppingList();
+        }
+
+        function updateDashboardShoppingCount() {
+            cleanShoppingList();
+            const uncheckedCount = shoppingList.filter(item => !item.checked).length;
+            const countEl = document.getElementById('shoppingCountDashboard');
+            if (countEl) {
+                countEl.innerText = `${uncheckedCount} item${uncheckedCount === 1 ? '' : 's'}`;
+            }
+        }
+
+        function renderShoppingList() {
+            cleanShoppingList();
+            updateDashboardShoppingCount();
+            const container = document.getElementById('shoppingListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (shoppingList.length === 0) {
+                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Shopping list is empty</li>';
+                return;
+            }
+
+            shoppingList.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
+                
+                li.innerHTML = `
+                    <div class="shopping-item-left">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onclick="toggleShoppingItem(${index})">
+                        <span>${item.text}</span>
+                    </div>
+                    <button class="delete-item-btn" onclick="deleteShoppingItem(${index})">✕</button>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        function addShoppingItem() {
+            const input = document.getElementById('newItemInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            shoppingList.push({ text: text, checked: false, checkedAt: null });
+            input.value = '';
+            saveShoppingList();
+            renderShoppingList();
+        }
+
+        function handleShoppingKey(event) {
+            if (event.key === 'Enter') {
+                addShoppingItem();
+            }
+        }
+
+        function toggleShoppingItem(index) {
+            shoppingList[index].checked = !shoppingList[index].checked;
+            shoppingList[index].checkedAt = shoppingList[index].checked ? new Date().getTime() : null;
+            saveShoppingList();
+            renderShoppingList();
+        }
+
+        function deleteShoppingItem(index) {
+            shoppingList.splice(index, 1);
+            saveShoppingList();
+            renderShoppingList();
+        }
+
+        function saveShoppingList() {
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            updateDashboardShoppingCount();
+        }
+
+        updateDashboardShoppingCount();
+
+        // --- 5. LOCAL STORAGE & STREAK LOGIC ---
+        const todayKey = new Date().toISOString().slice(0, 10);
+
+        function checkDailyResets() {
+            const lastActiveDate = localStorage.getItem('lastActiveDate');
+            
+            if (lastActiveDate !== todayKey) {
+                if (lastActiveDate) {
+                    const lastDateObj = new Date(lastActiveDate);
+                    const currentDateObj = new Date(todayKey);
+                    const diffTime = Math.abs(currentDateObj - lastDateObj);
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays > 1) {
+                        localStorage.setItem('supplementsStreak', '0');
+                        localStorage.setItem('jobStreak', '0');
+                    }
+                }
+
+                localStorage.setItem('supplementsDone', 'false');
+                localStorage.setItem('pushupsDone', 'false');
+                localStorage.setItem('readerDone', 'false');
+                localStorage.setItem('jobsDoneToday', 'false');
+                localStorage.setItem('lastActiveDate', todayKey);
+            }
+        }
+        checkDailyResets();
+
+        function completeSupplements() {
+            if (localStorage.getItem('supplementsDone') !== 'true') {
+                localStorage.setItem('supplementsDone', 'true');
+                let currentStreak = parseInt(localStorage.getItem('supplementsStreak') || '0') + 1;
+                localStorage.setItem('supplementsStreak', currentStreak);
+                updateUI();
+            }
+        }
+
+        function logJobs() {
+            let inputVal = parseInt(document.getElementById('jobCountInput').value);
+            if (!inputVal || inputVal <= 0) return;
+
+            if (localStorage.getItem('jobsDoneToday') !== 'true') {
+                localStorage.setItem('jobsDoneToday', 'true');
+                let currentStreak = parseInt(localStorage.getItem('jobStreak') || '0') + 1;
+                localStorage.setItem('jobStreak', currentStreak);
+            }
+
+            let totalJobs = parseInt(localStorage.getItem('totalJobsApplied') || '0') + inputVal;
+            localStorage.setItem('totalJobsApplied', totalJobs);
+            updateUI();
+        }
+
+        function completePushups() {
+            if (localStorage.getItem('pushupsDone') !== 'true') {
+                localStorage.setItem('pushupsDone', 'true');
+                let totalPushupDays = parseInt(localStorage.getItem('totalPushupDays') || '0') + 1;
+                localStorage.setItem('totalPushupDays', totalPushupDays);
+                updateUI();
+            }
+        }
+
+        function completeReader() {
+            if (localStorage.getItem('readerDone') !== 'true') {
+                localStorage.setItem('readerDone', 'true');
+                let totalReaderDays = parseInt(localStorage.getItem('totalReaderDays') || '0') + 1;
+                localStorage.setItem('totalReaderDays', totalReaderDays);
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            if (localStorage.getItem('supplementsDone') === 'true') {
+                let btn = document.getElementById('supplementsBtn');
+                btn.innerText = '✓ Supplements Taken';
+                btn.className = 'action-btn completed';
+            }
+
+            if (localStorage.getItem('jobsDoneToday') === 'true') {
+                document.getElementById('jobInputSection').style.display = 'none';
+                document.getElementById('jobStatusMsg').style.display = 'block';
+            }
+
+            if (localStorage.getItem('pushupsDone') === 'true') {
+                let btn = document.getElementById('pushupBtn');
+                btn.innerText = `✓ Circuit Completed`;
+                btn.className = 'action-btn completed';
+            }
+
+            if (localStorage.getItem('readerDone') === 'true') {
+                let btn = document.getElementById('readerBtn');
+                btn.innerText = '✓ Read Logged Today';
+                btn.className = 'action-btn completed';
+            }
+
+            let supplementStreak = localStorage.getItem('supplementsStreak') || '0';
+            let jobStreak = localStorage.getItem('jobStreak') || '0';
+            let totalJobs = localStorage.getItem('totalJobsApplied') || '0';
+
+            document.getElementById('supplementsStats').innerText = `🔥 Streak: ${supplementStreak} days`;
+            document.getElementById('jobStats').innerText = `Total Applied: ${totalJobs} | 🔥 Streak: ${jobStreak} days`;
+            document.getElementById('pushupStats').innerText = `Tracked: ${localStorage.getItem('totalPushupDays') || '0'} / 61 days (Aug - Sept)`;
+            document.getElementById('readerStats').innerText = `Tracked: ${localStorage.getItem('totalReaderDays') || '0'} / 61 days (Aug - Sept)`;
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
