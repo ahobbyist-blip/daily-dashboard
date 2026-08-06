@@ -1,1157 +1,1411 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <title>My Daily Command Center</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --success: #22c55e;
-            --success-bg: #14532d;
-            --category-color: #cbd5e1;
-            --danger: #ef4444;
-        }
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #f8fafc;
+        --text-muted: #94a3b8;
+        --accent: #38bdf8;
+        --success: #22c55e;
+        --success-bg: #14532d;
+        --category-color: #cbd5e1;
+        --danger: #ef4444;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 12px;
-            display: flex;
-            justify-content: center;
-            -webkit-tap-highlight-color: transparent;
-        }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
+      html,
+      body {
+        height: 100%;
+        overflow-x: hidden;
+        margin: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .dashboard-container {
+        width: 100%;
+        max-width: 950px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding-bottom: 70px;
+        min-height: 100vh;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+      }
+
+      .page {
+        display: none;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+      }
+
+      .page.active {
+        display: flex;
+        min-height: 100%;
+      }
+
+      .category-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        scroll-snap-align: start;
+        min-height: calc(100vh - 40px);
+        padding: 20px 0;
+      }
+
+      .page.active {
+        display: flex;
+      }
+
+      .category-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .category-title {
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--category-color);
+        border-bottom: 2px solid #334155;
+        padding-bottom: 4px;
+        margin: 0;
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      @media (min-width: 600px) {
         .dashboard-container {
-            width: 100%;
-            max-width: 950px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding-bottom: 70px;
-            height: calc(100vh - 24px);
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
+          height: auto;
+          overflow-y: visible;
+          scroll-snap-type: none;
         }
-
-        .page {
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-        }
-
-        .page.active {
-            display: flex;
-            min-height: 100%;
-        }
-
         .category-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            scroll-snap-align: start;
-            min-height: calc(100vh - 40px);
-            padding: 20px 0;
+          min-height: auto;
+          padding: 0;
         }
-
-        .page.active {
-            display: flex;
-        }
-
-        .category-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .category-title {
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--category-color);
-            border-bottom: 2px solid #334155;
-            padding-bottom: 4px;
-            margin: 0;
-        }
-
         .card-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
         }
-
-        @media (min-width: 600px) {
-            .dashboard-container {
-                height: auto;
-                overflow-y: visible;
-                scroll-snap-type: none;
-            }
-            .category-section {
-                min-height: auto;
-                padding: 0;
-            }
-            .card-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 20px;
-            }
-            body {
-                padding: 20px;
-            }
+        body {
+          padding: 20px;
         }
+      }
 
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-        }
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
 
-        .card-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 6px;
-            margin-bottom: 12px;
-        }
+      .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #334155;
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+      }
 
-        .card h3 {
-            margin: 0;
-            font-size: 1.05rem;
-            color: var(--accent);
-            border-bottom: none;
-            padding-bottom: 0;
-        }
+      .card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--accent);
+        border-bottom: none;
+        padding-bottom: 0;
+      }
 
-        .edit-icon-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: color 0.2s;
-        }
+      .edit-icon-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: color 0.2s;
+      }
 
-        .edit-icon-btn:hover {
-            color: var(--accent);
-            background: #0f172a;
-        }
+      .edit-icon-btn:hover {
+        color: var(--accent);
+        background: #0f172a;
+      }
 
-        .weather-info, .finance-info, .pollen-info {
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
+      .weather-info,
+      .finance-info,
+      .pollen-info {
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
 
-        .highlight {
-            font-size: 1.35rem;
-            font-weight: bold;
-            color: #fff;
-        }
+      .highlight {
+        font-size: 1.35rem;
+        font-weight: bold;
+        color: #fff;
+      }
 
-        .action-btn {
-            background-color: var(--accent);
-            color: var(--bg-color);
-            border: none;
-            padding: 14px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            width: 100%;
-            font-size: 1rem;
-            margin-top: 10px;
-        }
+      .action-btn {
+        background-color: var(--accent);
+        color: var(--bg-color);
+        border: none;
+        padding: 14px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        width: 100%;
+        font-size: 1rem;
+        margin-top: 10px;
+      }
 
-        .action-btn:active {
-            transform: scale(0.98);
-        }
+      .action-btn:active {
+        transform: scale(0.98);
+      }
 
-        .action-btn.completed {
-            background-color: var(--success-bg);
-            color: var(--success);
-            border: 1px solid var(--success);
-            cursor: default;
-        }
+      .action-btn.completed {
+        background-color: var(--success-bg);
+        color: var(--success);
+        border: 1px solid var(--success);
+        cursor: default;
+      }
 
-        .tracker-stats {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-            text-align: center;
-        }
+      .tracker-stats {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 8px;
+        text-align: center;
+      }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
+      .input-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
 
-        .input-group input {
-            flex: 1;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-        }
+      .input-group input {
+        flex: 1;
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+      }
 
-        .input-group button {
-            width: auto;
-            padding: 12px 18px;
-            margin-top: 0;
-        }
+      .input-group button {
+        width: auto;
+        padding: 12px 18px;
+        margin-top: 0;
+      }
 
+      .clock-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .clock-box {
+        flex: 1;
+        min-width: 120px;
+        background: #0f172a;
+        padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #334155;
+      }
+
+      @media (max-width: 599px) {
         .clock-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
+          flex-direction: column;
         }
 
         .clock-box {
-            flex: 1;
-            background: #0f172a;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #334155;
+          width: 100%;
         }
+      }
 
-        .clock-time {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #fff;
-            margin-top: 4px;
-        }
-        
-        .date-display {
-            text-align: center;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 8px;
-            font-weight: 500;
-        }
+      .clock-time {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #fff;
+        margin-top: 4px;
+      }
 
-        .fitness-list {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin: 0 0 10px 0;
-            line-height: 1.6;
-        }
+      .date-display {
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 8px;
+        font-weight: 500;
+      }
 
-        .pollen-level-low { color: #22c55e; font-weight: bold; }
-        .pollen-level-moderate { color: #eab308; font-weight: bold; }
-        .pollen-level-high { color: #ef4444; font-weight: bold; }
+      .fitness-list {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin: 0 0 10px 0;
+        line-height: 1.6;
+      }
 
-        .item-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 15px 0;
-            max-height: 50vh;
-            overflow-y: auto;
-        }
+      .pollen-level-low {
+        color: #22c55e;
+        font-weight: bold;
+      }
+      .pollen-level-moderate {
+        color: #eab308;
+        font-weight: bold;
+      }
+      .pollen-level-high {
+        color: #ef4444;
+        font-weight: bold;
+      }
 
-        .list-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            border: 1px solid #334155;
-        }
+      .item-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 15px 0;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
 
-        .list-row.checked span {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
+      .list-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0f172a;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        border: 1px solid #334155;
+      }
 
-        .list-row-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            overflow: hidden;
-        }
+      .list-row.checked span {
+        text-decoration: line-through;
+        color: var(--text-muted);
+      }
 
-        .list-row input[type="checkbox"] {
-            accent-color: var(--accent);
-            cursor: pointer;
-            width: 20px;
-            height: 20px;
-        }
+      .list-row-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        overflow: hidden;
+      }
 
-        .delete-item-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 4px 8px;
-        }
+      .list-row input[type="checkbox"] {
+        accent-color: var(--accent);
+        cursor: pointer;
+        width: 20px;
+        height: 20px;
+      }
 
-        .delete-item-btn:hover {
-            color: var(--danger);
-        }
+      .delete-item-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        padding: 4px 8px;
+      }
 
-        /* Floating Navigation & Action Buttons */
-        .float-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--accent);
-            color: var(--bg-color);
-            border: none;
-            border-radius: 50%;
-            width: 55px;
-            height: 55px;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: transform 0.2s;
-        }
+      .delete-item-btn:hover {
+        color: var(--danger);
+      }
 
-        .float-btn:active {
-            transform: scale(0.95);
-        }
+      /* Floating Navigation & Action Buttons */
+      .float-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--accent);
+        color: var(--bg-color);
+        border: none;
+        border-radius: 50%;
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        transition: transform 0.2s;
+      }
+
+      .float-btn:active {
+        transform: scale(0.95);
+      }
+
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="dashboard-container">
-
-        <!-- PAGE 1: DASHBOARD MAIN -->
-        <div id="mainPage" class="page active">
-
-            <!-- CATEGORY: OVERVIEW & TIME -->
-            <div class="category-section">
-                <h2 class="category-title">Overview & Time</h2>
-                <div class="card-grid">
-                    <div class="card" style="grid-column: 1 / -1;">
-                        <div class="card-header-row">
-                            <h3>🕒 World Clocks & Date</h3>
-                        </div>
-                        <div class="clock-container">
-                            <div class="clock-box">
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">Local Time</div>
-                                <div class="clock-time" id="localClock">--:--:--</div>
-                            </div>
-                            <div class="clock-box">
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">India (IST)</div>
-                                <div class="clock-time" id="indiaClock">--:--:--</div>
-                            </div>
-                            <div class="clock-box">
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">EUR-INR</div>
-                                <span class="clock-time" id="eurInrRate">Loading...</span>
-                            </div>
-                        </div>
-                        <div class="date-display" id="dateDisplay">Loading date...</div>
-                    </div>
+      <!-- PAGE 1: DASHBOARD MAIN -->
+      <div id="mainPage" class="page active">
+        <!-- CATEGORY: OVERVIEW & TIME -->
+        <div class="category-section">
+          <h2 class="category-title">Overview & Time</h2>
+          <div class="card-grid">
+            <div class="card" style="grid-column: 1 / -1">
+              <div class="card-header-row">
+                <h3>🕒 World Clocks & Date</h3>
+              </div>
+              <div class="clock-container">
+                <div class="clock-box">
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
+                    Local Time
+                  </div>
+                  <div class="clock-time" id="localClock">--:--:--</div>
                 </div>
-            </div>
-
-            <!-- CATEGORY: ENVIRONMENT & FINANCE -->
-            <div class="category-section">
-                <h2 class="category-title">Environment & Finance</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>🌤️ Weather & Recommendations</h3>
-                        </div>
-                        <div class="weather-info">
-                            <span class="highlight" id="currentTemp">--°C</span> (Current)<br>
-                            High: <strong id="highTemp">--°C</strong><br>
-                            Low: <strong id="lowTemp">--°C</strong><br>
-                            <div id="weatherForecast" style="margin-top: 8px; color: var(--text-muted);">Forecast: loading...</div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>🌦️ Weather Advice</h3>
-                        </div>
-                        <div id="weatherAdvice" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
-                            Analyzing weather conditions...
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>🌿 Pollen Levels</h3>
-                        </div>
-                        <div class="pollen-info">
-                            Status: <span id="pollenStatus" class="highlight" style="font-size: 1.1rem;">Checking...</span><br>
-                            • Birch / Alder: <span id="pollenBirch">--</span><br>
-                            • Grasses: <span id="pollenGrass">--</span><br>
-                            • Ragweed: <span id="pollenRagweed">--</span>
-                        </div>
-                        <div class="tracker-stats" id="pollenAdvice">Live air quality lookup</div>
-                    </div>
+                <div class="clock-box">
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
+                    India (IST)
+                  </div>
+                  <div class="clock-time" id="indiaClock">--:--:--</div>
                 </div>
-            </div>
-
-            <!-- CATEGORY: DAILY HABITS & PRODUCTIVITY -->
-            <div class="category-section">
-                <h2 class="category-title">Habits & Productivity</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>💊 Daily Supplements</h3>
-                            <button class="edit-icon-btn" onclick="switchPage('supplements')" title="Edit Supplements">⚙️</button>
-                        </div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Status: Pending intake</p>
-                        <div class="finance-info">
-                            Tracking: <br>
-                            <span class="highlight" id="supplementsCountDashboard">0</span> supplement<span id="supplementsCountPlural">s</span>
-                        </div>
-                        <button id="supplementsBtn" class="action-btn" onclick="completeSupplements()">Take Supplements</button>
-                        <div class="tracker-stats" id="supplementsStats">🔥 Streak: 0 days</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>💼 Job Applications</h3>
-                        </div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Log jobs applied for today</p>
-                        <div class="input-group" id="jobInputSection">
-                            <input type="number" id="jobCountInput" min="1" placeholder="e.g., 3" value="1">
-                            <button class="action-btn" style="margin-top:0;" onclick="logJobs()">Log</button>
-                        </div>
-                        <div id="jobStatusMsg" style="display:none; text-align:center; color: var(--success); font-weight: bold; margin-top: 10px;">✓ Logged Today</div>
-                        <div class="tracker-stats" id="jobStats">Total Applied: 0 | 🔥 Streak: 0 days</div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>📚 Project Reader</h3>
-                        </div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Daily reading session</p>
-                        <button id="readerBtn" class="action-btn" onclick="completeReader()">Read Today</button>
-                        <div class="tracker-stats" id="readerStats">Tracked: 0 / 61 days (Aug - Sept)</div>
-                    </div>
+                <div class="clock-box">
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
+                    EUR-INR
+                  </div>
+                  <span class="clock-time" id="eurInrRate">Loading...</span>
                 </div>
+              </div>
+              <div class="date-display" id="dateDisplay">Loading date...</div>
             </div>
-
-            <!-- CATEGORY: FITNESS -->
-            <div class="category-section">
-                <h2 class="category-title">Fitness</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>💪 Daily Fitness Circuit</h3>
-                            <button class="edit-icon-btn" onclick="switchPage('exercise')" title="Edit Circuit">⚙️</button>
-                        </div>
-                        <div class="fitness-list" id="dashboardFitnessList">
-                            <!-- Rendered dynamically via JS -->
-                        </div>
-                        <button id="fitnessBtn" class="action-btn" onclick="completeFitness()">Mark Circuit Done</button>
-                        <div class="tracker-stats" id="fitnessStats">Tracked: 0 / 61 days (Aug - Sept)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CATEGORY: SHOPPING OVERVIEW -->
-            <div class="category-section">
-                <h2 class="category-title">Shopping Overview</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <div class="card-header-row">
-                            <h3>🛒 Shopping Summary</h3>
-                        </div>
-                        <div class="finance-info">
-                            Items to Buy: <br>
-                            <span class="highlight" id="shoppingCountDashboard">0 items</span>
-                        </div>
-                        <button class="action-btn" onclick="switchPage('shopping')" style="margin-top: 15px;">Open Shopping List</button>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
 
-        <!-- PAGE 2: SHOPPING LIST PAGE -->
-        <div id="shoppingPage" class="page">
-            <div class="category-section">
-                <h2 class="category-title">Shopping Management</h2>
-                <div class="card" style="width: 100%;">
-                    <div class="card-header-row">
-                        <h3>🛒 Grocery & Shopping List</h3>
-                    </div>
-                    <ul class="item-list" id="shoppingListContainer"></ul>
-                    <div class="input-group">
-                        <input type="text" id="newItemInput" placeholder="Add new item..." onkeypress="handleShoppingKey(event)">
-                        <button class="action-btn" style="margin-top:0;" onclick="addShoppingItem()">Add</button>
-                    </div>
-                    <div class="tracker-stats" style="margin-top: 15px;">Checked items auto-delete after 24 hours</div>
+        <!-- CATEGORY: ENVIRONMENT & FINANCE -->
+        <div class="category-section">
+          <h2 class="category-title">Environment & Finance</h2>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-header-row">
+                <h3>🌤️ Weather & Recommendations</h3>
+              </div>
+              <div class="weather-info">
+                <span class="highlight" id="currentTemp">--°C</span>
+                (Current)<br />
+                High: <strong id="highTemp">--°C</strong><br />
+                Low: <strong id="lowTemp">--°C</strong><br />
+                <div
+                  id="weatherForecast"
+                  style="margin-top: 8px; color: var(--text-muted)"
+                >
+                  Forecast: loading...
                 </div>
+              </div>
             </div>
+
+            <div class="card">
+              <div class="card-header-row">
+                <h3>🌦️ Weather Advice</h3>
+              </div>
+              <div
+                id="weatherAdvice"
+                style="
+                  font-size: 0.95rem;
+                  color: var(--text-muted);
+                  line-height: 1.6;
+                "
+              >
+                Analyzing weather conditions...
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header-row">
+                <h3>🌿 Pollen Levels</h3>
+              </div>
+              <div class="pollen-info">
+                Status:
+                <span
+                  id="pollenStatus"
+                  class="highlight"
+                  style="font-size: 1.1rem"
+                  >Checking...</span
+                ><br />
+                • Birch / Alder: <span id="pollenBirch">--</span><br />
+                • Grasses: <span id="pollenGrass">--</span><br />
+                • Ragweed: <span id="pollenRagweed">--</span>
+              </div>
+              <div class="tracker-stats" id="pollenAdvice">
+                Live air quality lookup
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- PAGE 3: EXERCISE MANAGER PAGE -->
-        <div id="exercisePage" class="page">
-            <div class="category-section">
-                <h2 class="category-title">Circuit Manager</h2>
-                <div class="card" style="width: 100%;">
-                    <div class="card-header-row">
-                        <h3>💪 Manage Circuit Exercises</h3>
-                    </div>
-                    <ul class="item-list" id="exerciseListContainer"></ul>
-                    <div class="input-group">
-                        <input type="text" id="newExerciseInput" placeholder="e.g., Push-ups: 15 reps" onkeypress="handleExerciseKey(event)">
-                        <button class="action-btn" style="margin-top:0;" onclick="addFitnessExercise()">Add</button>
-                    </div>
-                    <div class="tracker-stats" style="margin-top: 15px;">Add, remove or edit your daily circuit exercises here</div>
-                </div>
+        <!-- CATEGORY: DAILY HABITS & PRODUCTIVITY -->
+        <div class="category-section">
+          <h2 class="category-title">Habits & Productivity</h2>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-header-row">
+                <h3>💊 Daily Supplements</h3>
+                <button
+                  class="edit-icon-btn"
+                  onclick="switchPage('supplements')"
+                  title="Edit Supplements"
+                >
+                  ⚙️
+                </button>
+              </div>
+              <p
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.85rem;
+                  margin: 0 0 5px 0;
+                "
+              >
+                Status: Pending intake
+              </p>
+              <div class="finance-info">
+                Tracking: <br />
+                <span class="highlight" id="supplementsCountDashboard">0</span>
+                supplement<span id="supplementsCountPlural">s</span>
+              </div>
+              <button
+                id="supplementsBtn"
+                class="action-btn"
+                onclick="completeSupplements()"
+              >
+                Take Supplements
+              </button>
+              <div class="tracker-stats" id="supplementsStats">
+                🔥 Streak: 0 days
+              </div>
             </div>
+
+            <div class="card">
+              <div class="card-header-row">
+                <h3>💼 Job Applications</h3>
+              </div>
+              <p
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.85rem;
+                  margin: 0 0 5px 0;
+                "
+              >
+                Log jobs applied for today
+              </p>
+              <div class="input-group" id="jobInputSection">
+                <input
+                  type="number"
+                  id="jobCountInput"
+                  min="1"
+                  placeholder="e.g., 3"
+                  value="1"
+                />
+                <button
+                  class="action-btn"
+                  style="margin-top: 0"
+                  onclick="logJobs()"
+                >
+                  Log
+                </button>
+              </div>
+              <div
+                id="jobStatusMsg"
+                style="
+                  display: none;
+                  text-align: center;
+                  color: var(--success);
+                  font-weight: bold;
+                  margin-top: 10px;
+                "
+              >
+                ✓ Logged Today
+              </div>
+              <div class="tracker-stats" id="jobStats">
+                Total Applied: 0 | 🔥 Streak: 0 days
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header-row">
+                <h3>📚 Project Reader</h3>
+              </div>
+              <p
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.85rem;
+                  margin: 0 0 5px 0;
+                "
+              >
+                Daily reading session
+              </p>
+              <button
+                id="readerBtn"
+                class="action-btn"
+                onclick="completeReader()"
+              >
+                Read Today
+              </button>
+              <div class="tracker-stats" id="readerStats">
+                Tracked: 0 / 61 days (Aug - Sept)
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- PAGE 4: SUPPLEMENTS MANAGER PAGE -->
-        <div id="supplementsPage" class="page">
-            <div class="category-section">
-                <h2 class="category-title">Supplement Tracker</h2>
-                <div class="card" style="width: 100%;">
-                    <div class="card-header-row">
-                        <h3>💊 Your Supplement List</h3>
-                    </div>
-                    <ul class="item-list" id="supplementsListContainer"></ul>
-                    <div class="input-group">
-                        <input type="text" id="newSupplementInput" placeholder="Add new supplement..." onkeypress="handleSupplementKey(event)">
-                        <button class="action-btn" style="margin-top:0;" onclick="addSupplementItem()">Add</button>
-                    </div>
-                    <div class="tracker-stats" style="margin-top: 15px;">Use this page like your exercise list: add supplements and delete items when they are no longer tracked.</div>
-                </div>
+        <!-- CATEGORY: FITNESS -->
+        <div class="category-section">
+          <h2 class="category-title">Fitness</h2>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-header-row">
+                <h3>💪 Daily Fitness Circuit</h3>
+                <button
+                  class="edit-icon-btn"
+                  onclick="switchPage('exercise')"
+                  title="Edit Circuit"
+                >
+                  ⚙️
+                </button>
+              </div>
+              <div class="fitness-list" id="dashboardFitnessList">
+                <!-- Rendered dynamically via JS -->
+              </div>
+              <button
+                id="fitnessBtn"
+                class="action-btn"
+                onclick="completeFitness()"
+              >
+                Mark Circuit Done
+              </button>
+              <div class="tracker-stats" id="fitnessStats">
+                Tracked: 0 / 61 days (Aug - Sept)
+              </div>
             </div>
+          </div>
         </div>
 
+        <!-- CATEGORY: SHOPPING OVERVIEW -->
+        <div class="category-section">
+          <h2 class="category-title">Shopping Overview</h2>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-header-row">
+                <h3>🛒 Shopping Summary</h3>
+              </div>
+              <div class="finance-info">
+                Items to Buy: <br />
+                <span class="highlight" id="shoppingCountDashboard"
+                  >0 items</span
+                >
+              </div>
+              <button
+                class="action-btn"
+                onclick="switchPage('shopping')"
+                style="margin-top: 15px"
+              >
+                Open Shopping List
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 2: SHOPPING LIST PAGE -->
+      <div id="shoppingPage" class="page">
+        <div class="category-section">
+          <h2 class="category-title">Shopping Management</h2>
+          <div class="card" style="width: 100%">
+            <div class="card-header-row">
+              <h3>🛒 Grocery & Shopping List</h3>
+            </div>
+            <ul class="item-list" id="shoppingListContainer"></ul>
+            <div class="input-group">
+              <input
+                type="text"
+                id="newItemInput"
+                placeholder="Add new item..."
+                onkeypress="handleShoppingKey(event)"
+              />
+              <button
+                class="action-btn"
+                style="margin-top: 0"
+                onclick="addShoppingItem()"
+              >
+                Add
+              </button>
+            </div>
+            <div class="tracker-stats" style="margin-top: 15px">
+              Checked items auto-delete after 24 hours
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 3: EXERCISE MANAGER PAGE -->
+      <div id="exercisePage" class="page">
+        <div class="category-section">
+          <h2 class="category-title">Circuit Manager</h2>
+          <div class="card" style="width: 100%">
+            <div class="card-header-row">
+              <h3>💪 Manage Circuit Exercises</h3>
+            </div>
+            <ul class="item-list" id="exerciseListContainer"></ul>
+            <div class="input-group">
+              <input
+                type="text"
+                id="newExerciseInput"
+                placeholder="e.g., Push-ups: 15 reps"
+                onkeypress="handleExerciseKey(event)"
+              />
+              <button
+                class="action-btn"
+                style="margin-top: 0"
+                onclick="addFitnessExercise()"
+              >
+                Add
+              </button>
+            </div>
+            <div class="tracker-stats" style="margin-top: 15px">
+              Add, remove or edit your daily circuit exercises here
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 4: SUPPLEMENTS MANAGER PAGE -->
+      <div id="supplementsPage" class="page">
+        <div class="category-section">
+          <h2 class="category-title">Supplement Tracker</h2>
+          <div class="card" style="width: 100%">
+            <div class="card-header-row">
+              <h3>💊 Your Supplement List</h3>
+            </div>
+            <ul class="item-list" id="supplementsListContainer"></ul>
+            <div class="input-group">
+              <input
+                type="text"
+                id="newSupplementInput"
+                placeholder="Add new supplement..."
+                onkeypress="handleSupplementKey(event)"
+              />
+              <button
+                class="action-btn"
+                style="margin-top: 0"
+                onclick="addSupplementItem()"
+              >
+                Add
+              </button>
+            </div>
+            <div class="tracker-stats" style="margin-top: 15px">
+              Use this page like your exercise list: add supplements and delete
+              items when they are no longer tracked.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- FLOATING NAVIGATION BUTTON -->
-    <button class="float-btn" id="floatNavBtn" onclick="toggleMainNavigation()" title="Open Shopping">🛒</button>
+    <button
+      class="float-btn"
+      id="floatNavBtn"
+      onclick="toggleMainNavigation()"
+      title="Open Shopping"
+    >
+      ⫶☰
+    </button>
 
     <script>
-        // --- PAGE ROUTING SYSTEM ---
-        let currentPage = 'main';
+      // --- PAGE ROUTING SYSTEM ---
+      let currentPage = "main";
 
-        function switchPage(targetPage) {
-            const mainPage = document.getElementById('mainPage');
-            const shoppingPage = document.getElementById('shoppingPage');
-            const exercisePage = document.getElementById('exercisePage');
-            const supplementsPage = document.getElementById('supplementsPage');
-            const floatBtn = document.getElementById('floatNavBtn');
-            
-            mainPage.classList.remove('active');
-            shoppingPage.classList.remove('active');
-            exercisePage.classList.remove('active');
-            supplementsPage.classList.remove('active');
+      function switchPage(targetPage) {
+        const mainPage = document.getElementById("mainPage");
+        const shoppingPage = document.getElementById("shoppingPage");
+        const exercisePage = document.getElementById("exercisePage");
+        const supplementsPage = document.getElementById("supplementsPage");
+        const floatBtn = document.getElementById("floatNavBtn");
 
-            if (targetPage === 'main') {
-                mainPage.classList.add('active');
-                currentPage = 'main';
-                floatBtn.innerHTML = '⫶☰';
-                floatBtn.setAttribute('title', 'Open Shopping');
-                updateDashboardShoppingCount();
-                renderDashboardFitnessList();
-                updateUI();
-            } else if (targetPage === 'shopping') {
-                shoppingPage.classList.add('active');
-                currentPage = 'shopping';
-                floatBtn.innerHTML = '🏠︎';
-                floatBtn.setAttribute('title', 'Back to Dashboard');
-                renderShoppingList();
-            } else if (targetPage === 'exercise') {
-                exercisePage.classList.add('active');
-                currentPage = 'exercise';
-                floatBtn.innerHTML = '🏠︎';
-                floatBtn.setAttribute('title', 'Back to Dashboard');
-                renderExerciseList();
-            } else if (targetPage === 'supplements') {
-                supplementsPage.classList.add('active');
-                currentPage = 'supplements';
-                floatBtn.innerHTML = '🏠︎';
-                floatBtn.setAttribute('title', 'Back to Dashboard');
-                renderSupplementsPage();
-            }
+        mainPage.classList.remove("active");
+        shoppingPage.classList.remove("active");
+        exercisePage.classList.remove("active");
+        supplementsPage.classList.remove("active");
+
+        if (targetPage === "main") {
+          mainPage.classList.add("active");
+          currentPage = "main";
+          floatBtn.innerHTML = "⫶☰";
+          floatBtn.setAttribute("title", "Open Shopping");
+          updateDashboardShoppingCount();
+          renderDashboardFitnessList();
+          updateUI();
+        } else if (targetPage === "shopping") {
+          shoppingPage.classList.add("active");
+          currentPage = "shopping";
+          floatBtn.innerHTML = "🏠︎";
+          floatBtn.setAttribute("title", "Back to Dashboard");
+          renderShoppingList();
+        } else if (targetPage === "exercise") {
+          exercisePage.classList.add("active");
+          currentPage = "exercise";
+          floatBtn.innerHTML = "🏠︎";
+          floatBtn.setAttribute("title", "Back to Dashboard");
+          renderExerciseList();
+        } else if (targetPage === "supplements") {
+          supplementsPage.classList.add("active");
+          currentPage = "supplements";
+          floatBtn.innerHTML = "🏠︎";
+          floatBtn.setAttribute("title", "Back to Dashboard");
+          renderSupplementsPage();
+        }
+      }
+
+      function toggleMainNavigation() {
+        if (currentPage === "main") {
+          switchPage("shopping");
+        } else {
+          switchPage("main");
+        }
+      }
+
+      // --- 0. CLOCKS & DATE FORMATTER ---
+      function updateClocksAndDate() {
+        const now = new Date();
+        document.getElementById("localClock").innerText =
+          now.toLocaleTimeString("en-GB", { hour12: false });
+
+        const optionsIST = {
+          timeZone: "Asia/Kolkata",
+          timeStyle: "medium",
+          hour12: false,
+        };
+        document.getElementById("indiaClock").innerText =
+          new Intl.DateTimeFormat("en-GB", optionsIST).format(now);
+
+        document.getElementById("dateDisplay").innerText =
+          now.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          });
+      }
+      setInterval(updateClocksAndDate, 1000);
+      updateClocksAndDate();
+
+      // --- 1. LIVE WEATHER & POLLEN FETCH ---
+      async function fetchEnvironmentData() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              getWeatherData(
+                position.coords.latitude,
+                position.coords.longitude,
+              );
+              getPollenData(
+                position.coords.latitude,
+                position.coords.longitude,
+              );
+            },
+            () => {
+              getWeatherData(53.5511, 9.9937);
+              getPollenData(53.5511, 9.9937);
+            },
+          );
+        } else {
+          getWeatherData(53.5511, 9.9937);
+          getPollenData(53.5511, 9.9937);
+        }
+      }
+
+      async function getWeatherData(lat, lon) {
+        try {
+          let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+          let response = await fetch(url);
+          let data = await response.json();
+
+          let currentTemp = Math.round(data.current.temperature_2m);
+          let highTemp = Math.round(data.daily.temperature_2m_max[0]);
+          let lowTemp = Math.round(data.daily.temperature_2m_min[0]);
+          let precipitation = data.current.precipitation;
+
+          document.getElementById("currentTemp").innerText = `${currentTemp}°C`;
+          document.getElementById("highTemp").innerText = `${highTemp}°C`;
+          document.getElementById("lowTemp").innerText = `${lowTemp}°C`;
+          document.getElementById("weatherForecast").innerText =
+            `Forecast: ${getWeatherForecast(currentTemp, precipitation, highTemp, lowTemp)}`;
+
+          generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation);
+        } catch (error) {
+          document.getElementById("weatherAdvice").innerText =
+            "Could not load live weather.";
+        }
+      }
+
+      async function getPollenData(lat, lon) {
+        try {
+          let url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=grass_pollen,birch_pollen,ragweed_pollen&timezone=auto`;
+          let response = await fetch(url);
+          let data = await response.json();
+
+          let birch = data.current.birch_pollen ?? 0;
+          let grass = data.current.grass_pollen ?? 0;
+          let ragweed = data.current.ragweed_pollen ?? 0;
+
+          document.getElementById("pollenBirch").innerText =
+            `${Math.round(birch)} grains/m³`;
+          document.getElementById("pollenGrass").innerText =
+            `${Math.round(grass)} grains/m³`;
+          document.getElementById("pollenRagweed").innerText =
+            `${Math.round(ragweed)} grains/m³`;
+
+          let maxVal = Math.max(birch, grass, ragweed);
+          let statusEl = document.getElementById("pollenStatus");
+          let adviceEl = document.getElementById("pollenAdvice");
+
+          if (maxVal < 10) {
+            statusEl.innerText = "Low / Clean";
+            statusEl.className = "highlight pollen-level-low";
+            adviceEl.innerText = "Safe for outdoor activities.";
+          } else if (maxVal >= 10 && maxVal < 50) {
+            statusEl.innerText = "Moderate";
+            statusEl.className = "highlight pollen-level-moderate";
+            adviceEl.innerText = "Mild allergy precautions advised.";
+          } else {
+            statusEl.innerText = "High Pollen Alert";
+            statusEl.className = "highlight pollen-level-high";
+            adviceEl.innerText = "Keep windows closed & take antihistamines!";
+          }
+        } catch (error) {
+          document.getElementById("pollenStatus").innerText = "Unavailable";
+          document.getElementById("pollenAdvice").innerText =
+            "Could not fetch air quality API.";
+        }
+      }
+      fetchEnvironmentData();
+      registerServiceWorker();
+
+      function getWeatherForecast(current, precipitation, high, low) {
+        if (precipitation >= 5) {
+          return "⛈️ Heavy rain";
+        }
+        if (precipitation >= 1) {
+          return "🌧️ Rainy";
+        }
+        if (precipitation > 0) {
+          return "🌦️ Light rain / drizzle";
         }
 
-        function toggleMainNavigation() {
-            if (currentPage === 'main') {
-                switchPage('shopping');
-            } else {
-                switchPage('main');
-            }
+        const range = high - low;
+        if (current >= 28) {
+          return "☀️ Sunny";
+        }
+        if (current >= 20) {
+          return range > 10
+            ? "🌤️ Mostly sunny with some clouds"
+            : "☀️ Sunny to partly cloudy";
+        }
+        if (current >= 10) {
+          return "⛅ Partly cloudy";
+        }
+        if (current >= 0) {
+          return "🌥️ Cool and cloudy";
+        }
+        return "🌫️ Cold and foggy";
+      }
+
+      function registerServiceWorker() {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(() => console.log("Service Worker registered"))
+            .catch((err) =>
+              console.warn("Service Worker registration failed:", err),
+            );
+        }
+      }
+
+      function generateSmartAdvice(current, high, low, rain) {
+        let wearText = "";
+        let carryText = "";
+        let blindsText = "";
+
+        if (current < 5) {
+          wearText = "🧥 Winter wear: Heavy coat, beanie, thermal layers.";
+        } else if (current >= 5 && current < 15) {
+          wearText = "🧥 Jacket / Sweater recommended.";
+        } else if (current >= 15 && current < 22) {
+          wearText = "👕 Light jacket or hoodie.";
+        } else {
+          wearText = "👕 T-shirt weather. Cap recommended if sunny.";
         }
 
-        // --- 0. CLOCKS & DATE FORMATTER ---
-        function updateClocksAndDate() {
-            const now = new Date();
-            document.getElementById('localClock').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
-            
-            const optionsIST = { timeZone: 'Asia/Kolkata', timeStyle: 'medium', hour12: false };
-            document.getElementById('indiaClock').innerText = new Intl.DateTimeFormat('en-GB', optionsIST).format(now);
-
-            document.getElementById('dateDisplay').innerText = now.toLocaleDateString('en-GB', { 
-                weekday: 'long', 
-                day: '2-digit', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-        }
-        setInterval(updateClocksAndDate, 1000);
-        updateClocksAndDate();
-
-        // --- 1. LIVE WEATHER & POLLEN FETCH ---
-        async function fetchEnvironmentData() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    getWeatherData(position.coords.latitude, position.coords.longitude);
-                    getPollenData(position.coords.latitude, position.coords.longitude);
-                }, () => {
-                    getWeatherData(53.5511, 9.9937); 
-                    getPollenData(53.5511, 9.9937);
-                });
-            } else {
-                getWeatherData(53.5511, 9.9937);
-                getPollenData(53.5511, 9.9937);
-            }
+        if (rain > 0) {
+          carryText = "🌂 Carry an umbrella (active precipitation).";
+        } else {
+          carryText = "🌂 No umbrella needed.";
         }
 
-        async function getWeatherData(lat, lon) {
-            try {
-                let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
-                let response = await fetch(url);
-                let data = await response.json();
-
-                let currentTemp = Math.round(data.current.temperature_2m);
-                let highTemp = Math.round(data.daily.temperature_2m_max[0]);
-                let lowTemp = Math.round(data.daily.temperature_2m_min[0]);
-                let precipitation = data.current.precipitation;
-
-                document.getElementById('currentTemp').innerText = `${currentTemp}°C`;
-                document.getElementById('highTemp').innerText = `${highTemp}°C`;
-                document.getElementById('lowTemp').innerText = `${lowTemp}°C`;
-                document.getElementById('weatherForecast').innerText = `Forecast: ${getWeatherForecast(currentTemp, precipitation, highTemp, lowTemp)}`;
-
-                generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation);
-            } catch (error) {
-                document.getElementById('weatherAdvice').innerText = 'Could not load live weather.';
-            }
+        if (high > 24) {
+          blindsText = "🪟 Keep window blinds closed to block heat.";
+        } else {
+          blindsText = "🪟 Keep window blinds open for natural warmth.";
         }
 
-        async function getPollenData(lat, lon) {
-            try {
-                let url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=grass_pollen,birch_pollen,ragweed_pollen&timezone=auto`;
-                let response = await fetch(url);
-                let data = await response.json();
-
-                let birch = data.current.birch_pollen ?? 0;
-                let grass = data.current.grass_pollen ?? 0;
-                let ragweed = data.current.ragweed_pollen ?? 0;
-
-                document.getElementById('pollenBirch').innerText = `${Math.round(birch)} grains/m³`;
-                document.getElementById('pollenGrass').innerText = `${Math.round(grass)} grains/m³`;
-                document.getElementById('pollenRagweed').innerText = `${Math.round(ragweed)} grains/m³`;
-
-                let maxVal = Math.max(birch, grass, ragweed);
-                let statusEl = document.getElementById('pollenStatus');
-                let adviceEl = document.getElementById('pollenAdvice');
-
-                if (maxVal < 10) {
-                    statusEl.innerText = "Low / Clean";
-                    statusEl.className = "highlight pollen-level-low";
-                    adviceEl.innerText = "Safe for outdoor activities.";
-                } else if (maxVal >= 10 && maxVal < 50) {
-                    statusEl.innerText = "Moderate";
-                    statusEl.className = "highlight pollen-level-moderate";
-                    adviceEl.innerText = "Mild allergy precautions advised.";
-                } else {
-                    statusEl.innerText = "High Pollen Alert";
-                    statusEl.className = "highlight pollen-level-high";
-                    adviceEl.innerText = "Keep windows closed & take antihistamines!";
-                }
-            } catch (error) {
-                document.getElementById('pollenStatus').innerText = "Unavailable";
-                document.getElementById('pollenAdvice').innerText = "Could not fetch air quality API.";
-            }
-        }
-        fetchEnvironmentData();
-        registerServiceWorker();
-
-        function getWeatherForecast(current, precipitation, high, low) {
-            if (precipitation >= 5) {
-                return '⛈️ Heavy rain';
-            }
-            if (precipitation >= 1) {
-                return '🌧️ Rainy';
-            }
-            if (precipitation > 0) {
-                return '🌦️ Light rain / drizzle';
-            }
-
-            const range = high - low;
-            if (current >= 28) {
-                return '☀️ Sunny';
-            }
-            if (current >= 20) {
-                return range > 10 ? '🌤️ Mostly sunny with some clouds' : '☀️ Sunny to partly cloudy';
-            }
-            if (current >= 10) {
-                return '⛅ Partly cloudy';
-            }
-            if (current >= 0) {
-                return '🌥️ Cool and cloudy';
-            }
-            return '🌫️ Cold and foggy';
-        }
-
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(() => console.log('Service Worker registered'))
-                    .catch(err => console.warn('Service Worker registration failed:', err));
-            }
-        }
-
-        function generateSmartAdvice(current, high, low, rain) {
-            let wearText = "";
-            let carryText = "";
-            let blindsText = "";
-
-            if (current < 5) {
-                wearText = "🧥 Winter wear: Heavy coat, beanie, thermal layers.";
-            } else if (current >= 5 && current < 15) {
-                wearText = "🧥 Jacket / Sweater recommended.";
-            } else if (current >= 15 && current < 22) {
-                wearText = "👕 Light jacket or hoodie.";
-            } else {
-                wearText = "👕 T-shirt weather. Cap recommended if sunny.";
-            }
-
-            if (rain > 0) {
-                carryText = "🌂 Carry an umbrella (active precipitation).";
-            } else {
-                carryText = "🌂 No umbrella needed.";
-            }
-
-            if (high > 24) {
-                blindsText = "🪟 Keep window blinds closed to block heat.";
-            } else {
-                blindsText = "🪟 Keep window blinds open for natural warmth.";
-            }
-
-            document.getElementById('weatherAdvice').innerHTML = `
+        document.getElementById("weatherAdvice").innerHTML = `
                 ${wearText}<br>
                 ${carryText}<br>
                 ${blindsText}
             `;
+      }
+
+      // --- 2. CURRENCY FETCH ---
+      async function fetchExchangeRate() {
+        try {
+          let response = await fetch("https://open.er-api.com/v6/latest/EUR");
+          let data = await response.json();
+          let rate = data.rates.INR.toFixed(2);
+          document.getElementById("eurInrRate").innerText = `₹${rate}`;
+        } catch (error) {
+          document.getElementById("eurInrRate").innerText = "₹90.50 (Cached)";
+        }
+      }
+      fetchExchangeRate();
+
+      // --- 3. FITNESS CIRCUIT MANAGER LOGIC ---
+      let defaultExercises = [
+        "Push-ups",
+        "Squats",
+        "Leg Raises",
+        "Climbs",
+        "Planks",
+      ];
+      let fitnessList = JSON.parse(
+        localStorage.getItem("fitnessList") || JSON.stringify(defaultExercises),
+      );
+
+      function renderDashboardFitnessList() {
+        const container = document.getElementById("dashboardFitnessList");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (fitnessList.length === 0) {
+          container.innerHTML = "• No exercises in circuit.";
+          return;
         }
 
-        // --- 2. CURRENCY FETCH ---
-        async function fetchExchangeRate() {
-            try {
-                let response = await fetch('https://open.er-api.com/v6/latest/EUR');
-                let data = await response.json();
-                let rate = data.rates.INR.toFixed(2);
-                document.getElementById('eurInrRate').innerText = `₹${rate}`;
-            } catch (error) {
-                document.getElementById('eurInrRate').innerText = '₹90.50 (Cached)';
-            }
-        }
-        fetchExchangeRate();
+        fitnessList.forEach((ex) => {
+          const div = document.createElement("div");
+          div.innerHTML = `• ${ex}`;
+          container.appendChild(div);
+        });
+      }
 
-        // --- 3. FITNESS CIRCUIT MANAGER LOGIC ---
-        let defaultExercises = [
-            "Push-ups",
-            "Squats",
-            "Leg Raises",
-            "Climbs",
-            "Planks"
-        ];
-        let fitnessList = JSON.parse(localStorage.getItem('fitnessList') || JSON.stringify(defaultExercises));
+      let supplementsList = JSON.parse(
+        localStorage.getItem("supplementsList") || "[]",
+      );
 
-        function renderDashboardFitnessList() {
-            const container = document.getElementById('dashboardFitnessList');
-            if (!container) return;
-            container.innerHTML = '';
+      function renderDashboardSupplementCount() {
+        const countEl = document.getElementById("supplementsCountDashboard");
+        const pluralEl = document.getElementById("supplementsCountPlural");
+        const count = supplementsList.length;
+        if (countEl) countEl.innerText = count;
+        if (pluralEl) pluralEl.innerText = count === 1 ? "" : "s";
+      }
 
-            if (fitnessList.length === 0) {
-                container.innerHTML = '• No exercises in circuit.';
-                return;
-            }
+      function renderSupplementsPage() {
+        renderDashboardSupplementCount();
 
-            fitnessList.forEach(ex => {
-                const div = document.createElement('div');
-                div.innerHTML = `• ${ex}`;
-                container.appendChild(div);
-            });
+        const container = document.getElementById("supplementsListContainer");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (supplementsList.length === 0) {
+          container.innerHTML =
+            '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No supplements tracked yet</li>';
+          return;
         }
 
-        let supplementsList = JSON.parse(localStorage.getItem('supplementsList') || '[]');
-
-        function renderDashboardSupplementCount() {
-            const countEl = document.getElementById('supplementsCountDashboard');
-            const pluralEl = document.getElementById('supplementsCountPlural');
-            const count = supplementsList.length;
-            if (countEl) countEl.innerText = count;
-            if (pluralEl) pluralEl.innerText = count === 1 ? '' : 's';
-        }
-
-        function renderSupplementsPage() {
-            renderDashboardSupplementCount();
-
-            const container = document.getElementById('supplementsListContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (supplementsList.length === 0) {
-                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No supplements tracked yet</li>';
-                return;
-            }
-
-            supplementsList.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = 'list-row';
-                li.innerHTML = `
+        supplementsList.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.className = "list-row";
+          li.innerHTML = `
                     <div class="list-row-left">
                         <span>${item}</span>
                     </div>
                     <button class="delete-item-btn" onclick="deleteSupplementItem(${index})">✕</button>
                 `;
-                container.appendChild(li);
-            });
+          container.appendChild(li);
+        });
+      }
+
+      function addSupplementItem() {
+        const input = document.getElementById("newSupplementInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        supplementsList.push(text);
+        input.value = "";
+        saveSupplementsList();
+        renderSupplementsPage();
+      }
+
+      function handleSupplementKey(event) {
+        if (event.key === "Enter") {
+          addSupplementItem();
+        }
+      }
+
+      function deleteSupplementItem(index) {
+        supplementsList.splice(index, 1);
+        saveSupplementsList();
+        renderSupplementsPage();
+      }
+
+      function saveSupplementsList() {
+        localStorage.setItem(
+          "supplementsList",
+          JSON.stringify(supplementsList),
+        );
+      }
+
+      renderDashboardSupplementCount();
+
+      function renderExerciseList() {
+        const container = document.getElementById("exerciseListContainer");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (fitnessList.length === 0) {
+          container.innerHTML =
+            '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No exercises added</li>';
+          return;
         }
 
-        function addSupplementItem() {
-            const input = document.getElementById('newSupplementInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            supplementsList.push(text);
-            input.value = '';
-            saveSupplementsList();
-            renderSupplementsPage();
-        }
-
-        function handleSupplementKey(event) {
-            if (event.key === 'Enter') {
-                addSupplementItem();
-            }
-        }
-
-        function deleteSupplementItem(index) {
-            supplementsList.splice(index, 1);
-            saveSupplementsList();
-            renderSupplementsPage();
-        }
-
-        function saveSupplementsList() {
-            localStorage.setItem('supplementsList', JSON.stringify(supplementsList));
-        }
-
-        renderDashboardSupplementCount();
-
-        function renderExerciseList() {
-            const container = document.getElementById('exerciseListContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (fitnessList.length === 0) {
-                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No exercises added</li>';
-                return;
-            }
-
-            fitnessList.forEach((ex, index) => {
-                const li = document.createElement('li');
-                li.className = 'list-row';
-                li.innerHTML = `
+        fitnessList.forEach((ex, index) => {
+          const li = document.createElement("li");
+          li.className = "list-row";
+          li.innerHTML = `
                     <div class="list-row-left">
                         <span>${ex}</span>
                     </div>
                     <button class="delete-item-btn" onclick="deleteFitnessExercise(${index})">✕</button>
                 `;
-                container.appendChild(li);
-            });
-        }
+          container.appendChild(li);
+        });
+      }
 
-        function addFitnessExercise() {
-            const input = document.getElementById('newExerciseInput');
-            const text = input.value.trim();
-            if (!text) return;
+      function addFitnessExercise() {
+        const input = document.getElementById("newExerciseInput");
+        const text = input.value.trim();
+        if (!text) return;
 
-            fitnessList.push(text);
-            input.value = '';
-            saveFitnessList();
-            renderExerciseList();
-            renderDashboardFitnessList();
-        }
-
-        function handleExerciseKey(event) {
-            if (event.key === 'Enter') {
-                addFitnessExercise();
-            }
-        }
-
-        function deleteFitnessExercise(index) {
-            fitnessList.splice(index, 1);
-            saveFitnessList();
-            renderExerciseList();
-            renderDashboardFitnessList();
-        }
-
-        function saveFitnessList() {
-            localStorage.setItem('fitnessList', JSON.stringify(fitnessList));
-        }
-
+        fitnessList.push(text);
+        input.value = "";
+        saveFitnessList();
+        renderExerciseList();
         renderDashboardFitnessList();
+      }
 
-        // --- 4. SHOPPING LIST LOGIC ---
-        let shoppingList = loadShoppingList();
+      function handleExerciseKey(event) {
+        if (event.key === "Enter") {
+          addFitnessExercise();
+        }
+      }
 
-        function loadShoppingList() {
-            try {
-                return JSON.parse(localStorage.getItem('shoppingList')) || [];
-            } catch (error) {
-                return [];
-            }
+      function deleteFitnessExercise(index) {
+        fitnessList.splice(index, 1);
+        saveFitnessList();
+        renderExerciseList();
+        renderDashboardFitnessList();
+      }
+
+      function saveFitnessList() {
+        localStorage.setItem("fitnessList", JSON.stringify(fitnessList));
+      }
+
+      renderDashboardFitnessList();
+
+      // --- 4. SHOPPING LIST LOGIC ---
+      let shoppingList = loadShoppingList();
+
+      function loadShoppingList() {
+        try {
+          return JSON.parse(localStorage.getItem("shoppingList")) || [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function cleanAndSortShoppingList() {
+        const now = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+
+        shoppingList = shoppingList.filter((item) => {
+          if (!item.checked || !item.checkedAt) return true;
+          return now - item.checkedAt < oneDayMs;
+        });
+
+        shoppingList.sort((a, b) => {
+          if (a.checked !== b.checked) {
+            return a.checked ? 1 : -1;
+          }
+          if (a.checked && b.checked) {
+            return (a.checkedAt || 0) - (b.checkedAt || 0);
+          }
+          return 0;
+        });
+      }
+
+      function updateDashboardShoppingCount() {
+        const uncheckedCount = shoppingList.filter(
+          (item) => !item.checked,
+        ).length;
+        const countEl = document.getElementById("shoppingCountDashboard");
+        if (countEl) {
+          countEl.innerText = `${uncheckedCount} item${uncheckedCount === 1 ? "" : "s"}`;
+        }
+      }
+
+      function renderShoppingList() {
+        cleanAndSortShoppingList();
+        updateDashboardShoppingCount();
+
+        const container = document.getElementById("shoppingListContainer");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (shoppingList.length === 0) {
+          container.innerHTML =
+            '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Shopping list is empty</li>';
+          return;
         }
 
-        function cleanAndSortShoppingList() {
-            const now = Date.now();
-            const oneDayMs = 24 * 60 * 60 * 1000;
+        shoppingList.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.className = `list-row ${item.checked ? "checked" : ""}`;
 
-            shoppingList = shoppingList.filter(item => {
-                if (!item.checked || !item.checkedAt) return true;
-                return (now - item.checkedAt) < oneDayMs;
-            });
-
-            shoppingList.sort((a, b) => {
-                if (a.checked !== b.checked) {
-                    return a.checked ? 1 : -1;
-                }
-                if (a.checked && b.checked) {
-                    return (a.checkedAt || 0) - (b.checkedAt || 0);
-                }
-                return 0;
-            });
-        }
-
-        function updateDashboardShoppingCount() {
-            const uncheckedCount = shoppingList.filter(item => !item.checked).length;
-            const countEl = document.getElementById('shoppingCountDashboard');
-            if (countEl) {
-                countEl.innerText = `${uncheckedCount} item${uncheckedCount === 1 ? '' : 's'}`;
-            }
-        }
-
-        function renderShoppingList() {
-            cleanAndSortShoppingList();
-            updateDashboardShoppingCount();
-
-            const container = document.getElementById('shoppingListContainer');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (shoppingList.length === 0) {
-                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">Shopping list is empty</li>';
-                return;
-            }
-
-            shoppingList.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.className = `list-row ${item.checked ? 'checked' : ''}`;
-                
-                li.innerHTML = `
+          li.innerHTML = `
                     <div class="list-row-left">
-                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleShoppingItem(${index})">
+                        <input type="checkbox" ${item.checked ? "checked" : ""} onchange="toggleShoppingItem(${index})">
                         <span>${item.text}</span>
                     </div>
                     <button class="delete-item-btn" onclick="deleteShoppingItem(${index})">✕</button>
                 `;
-                container.appendChild(li);
-            });
-        }
+          container.appendChild(li);
+        });
+      }
 
-        function addShoppingItem() {
-            const input = document.getElementById('newItemInput');
-            const text = input.value.trim();
-            if (!text) return;
+      function addShoppingItem() {
+        const input = document.getElementById("newItemInput");
+        const text = input.value.trim();
+        if (!text) return;
 
-            shoppingList.push({ text: text, checked: false, checkedAt: null });
-            input.value = '';
-            saveShoppingList();
-            renderShoppingList();
-        }
-
-        function handleShoppingKey(event) {
-            if (event.key === 'Enter') {
-                addShoppingItem();
-            }
-        }
-
-        function toggleShoppingItem(index) {
-            if (!shoppingList[index]) return;
-            shoppingList[index].checked = !shoppingList[index].checked;
-            shoppingList[index].checkedAt = shoppingList[index].checked ? Date.now() : null;
-            saveShoppingList();
-            renderShoppingList();
-        }
-
-        function deleteShoppingItem(index) {
-            shoppingList.splice(index, 1);
-            saveShoppingList();
-            renderShoppingList();
-        }
-
-        function saveShoppingList() {
-            cleanAndSortShoppingList();
-            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-            updateDashboardShoppingCount();
-        }
-
+        shoppingList.push({ text: text, checked: false, checkedAt: null });
+        input.value = "";
+        saveShoppingList();
         renderShoppingList();
+      }
 
-        // --- 5. LOCAL STORAGE & STREAK LOGIC ---
-        const todayKey = new Date().toISOString().slice(0, 10);
-
-        function checkDailyResets() {
-            const lastActiveDate = localStorage.getItem('lastActiveDate');
-            
-            if (lastActiveDate !== todayKey) {
-                if (lastActiveDate) {
-                    const lastDateObj = new Date(lastActiveDate);
-                    const currentDateObj = new Date(todayKey);
-                    const diffTime = Math.abs(currentDateObj - lastDateObj);
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays > 1) {
-                        localStorage.setItem('supplementsStreak', '0');
-                        localStorage.setItem('jobStreak', '0');
-                    }
-                }
-
-                localStorage.setItem('supplementsDone', 'false');
-                localStorage.setItem('fitnessDone', 'false');
-                localStorage.setItem('readerDone', 'false');
-                localStorage.setItem('jobsDoneToday', 'false');
-                localStorage.setItem('lastActiveDate', todayKey);
-            }
+      function handleShoppingKey(event) {
+        if (event.key === "Enter") {
+          addShoppingItem();
         }
-        checkDailyResets();
+      }
 
-        function completeSupplements() {
-            if (localStorage.getItem('supplementsDone') !== 'true') {
-                localStorage.setItem('supplementsDone', 'true');
-                let currentStreak = parseInt(localStorage.getItem('supplementsStreak') || '0') + 1;
-                localStorage.setItem('supplementsStreak', currentStreak);
-                updateUI();
+      function toggleShoppingItem(index) {
+        if (!shoppingList[index]) return;
+        shoppingList[index].checked = !shoppingList[index].checked;
+        shoppingList[index].checkedAt = shoppingList[index].checked
+          ? Date.now()
+          : null;
+        saveShoppingList();
+        renderShoppingList();
+      }
+
+      function deleteShoppingItem(index) {
+        shoppingList.splice(index, 1);
+        saveShoppingList();
+        renderShoppingList();
+      }
+
+      function saveShoppingList() {
+        cleanAndSortShoppingList();
+        localStorage.setItem("shoppingList", JSON.stringify(shoppingList));
+        updateDashboardShoppingCount();
+      }
+
+      renderShoppingList();
+
+      // --- 5. LOCAL STORAGE & STREAK LOGIC ---
+      const todayKey = new Date().toISOString().slice(0, 10);
+
+      function checkDailyResets() {
+        const lastActiveDate = localStorage.getItem("lastActiveDate");
+
+        if (lastActiveDate !== todayKey) {
+          if (lastActiveDate) {
+            const lastDateObj = new Date(lastActiveDate);
+            const currentDateObj = new Date(todayKey);
+            const diffTime = Math.abs(currentDateObj - lastDateObj);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) {
+              localStorage.setItem("supplementsStreak", "0");
+              localStorage.setItem("jobStreak", "0");
             }
+          }
+
+          localStorage.setItem("supplementsDone", "false");
+          localStorage.setItem("fitnessDone", "false");
+          localStorage.setItem("readerDone", "false");
+          localStorage.setItem("jobsDoneToday", "false");
+          localStorage.setItem("lastActiveDate", todayKey);
         }
+      }
+      checkDailyResets();
 
-        function logJobs() {
-            let inputVal = parseInt(document.getElementById('jobCountInput').value);
-            if (!inputVal || inputVal <= 0) return;
-
-            if (localStorage.getItem('jobsDoneToday') !== 'true') {
-                localStorage.setItem('jobsDoneToday', 'true');
-                let currentStreak = parseInt(localStorage.getItem('jobStreak') || '0') + 1;
-                localStorage.setItem('jobStreak', currentStreak);
-            }
-
-            let totalJobs = parseInt(localStorage.getItem('totalJobsApplied') || '0') + inputVal;
-            localStorage.setItem('totalJobsApplied', totalJobs);
-            updateUI();
+      function completeSupplements() {
+        if (localStorage.getItem("supplementsDone") !== "true") {
+          localStorage.setItem("supplementsDone", "true");
+          let currentStreak =
+            parseInt(localStorage.getItem("supplementsStreak") || "0") + 1;
+          localStorage.setItem("supplementsStreak", currentStreak);
+          updateUI();
         }
+      }
 
-        function completeFitness() {
-            if (localStorage.getItem('fitnessDone') !== 'true') {
-                localStorage.setItem('fitnessDone', 'true');
-                let totalFitnessDays = parseInt(localStorage.getItem('totalFitnessDays') || '0') + 1;
-                localStorage.setItem('totalFitnessDays', totalFitnessDays);
-                updateUI();
-            }
-        }
+      function logJobs() {
+        let inputVal = parseInt(document.getElementById("jobCountInput").value);
+        if (!inputVal || inputVal <= 0) return;
 
-        function completeReader() {
-            if (localStorage.getItem('readerDone') !== 'true') {
-                localStorage.setItem('readerDone', 'true');
-                let totalReaderDays = parseInt(localStorage.getItem('totalReaderDays') || '0') + 1;
-                localStorage.setItem('totalReaderDays', totalReaderDays);
-                updateUI();
-            }
-        }
-
-        function updateUI() {
-            if (localStorage.getItem('supplementsDone') === 'true') {
-                let btn = document.getElementById('supplementsBtn');
-                btn.innerText = '✓ Supplements Taken';
-                btn.className = 'action-btn completed';
-            } else {
-                let btn = document.getElementById('supplementsBtn');
-                btn.innerText = 'Take Supplements';
-                btn.className = 'action-btn';
-            }
-
-            if (localStorage.getItem('jobsDoneToday') === 'true') {
-                document.getElementById('jobInputSection').style.display = 'none';
-                document.getElementById('jobStatusMsg').style.display = 'block';
-            } else {
-                document.getElementById('jobInputSection').style.display = 'flex';
-                document.getElementById('jobStatusMsg').style.display = 'none';
-            }
-
-            if (localStorage.getItem('fitnessDone') === 'true') {
-                let btn = document.getElementById('fitnessBtn');
-                btn.innerText = `✓ Circuit Completed`;
-                btn.className = 'action-btn completed';
-            } else {
-                let btn = document.getElementById('fitnessBtn');
-                btn.innerText = 'Mark Circuit Done';
-                btn.className = 'action-btn';
-            }
-
-            if (localStorage.getItem('readerDone') === 'true') {
-                let btn = document.getElementById('readerBtn');
-                btn.innerText = '✓ Read Logged Today';
-                btn.className = 'action-btn completed';
-            } else {
-                let btn = document.getElementById('readerBtn');
-                btn.innerText = 'Read Today';
-                btn.className = 'action-btn';
-            }
-
-            let supplementStreak = localStorage.getItem('supplementsStreak') || '0';
-            let jobStreak = localStorage.getItem('jobStreak') || '0';
-            let totalJobs = localStorage.getItem('totalJobsApplied') || '0';
-
-            document.getElementById('supplementsStats').innerText = `🔥 Streak: ${supplementStreak} days`;
-            document.getElementById('jobStats').innerText = `Total Applied: ${totalJobs} | 🔥 Streak: ${jobStreak} days`;
-            document.getElementById('fitnessStats').innerText = `Tracked: ${localStorage.getItem('totalFitnessDays') || '0'} / 61 days (Aug - Sept)`;
-            document.getElementById('readerStats').innerText = `Tracked: ${localStorage.getItem('totalReaderDays') || '0'} / 61 days (Aug - Sept)`;
+        if (localStorage.getItem("jobsDoneToday") !== "true") {
+          localStorage.setItem("jobsDoneToday", "true");
+          let currentStreak =
+            parseInt(localStorage.getItem("jobStreak") || "0") + 1;
+          localStorage.setItem("jobStreak", currentStreak);
         }
 
+        let totalJobs =
+          parseInt(localStorage.getItem("totalJobsApplied") || "0") + inputVal;
+        localStorage.setItem("totalJobsApplied", totalJobs);
         updateUI();
+      }
+
+      function completeFitness() {
+        if (localStorage.getItem("fitnessDone") !== "true") {
+          localStorage.setItem("fitnessDone", "true");
+          let totalFitnessDays =
+            parseInt(localStorage.getItem("totalFitnessDays") || "0") + 1;
+          localStorage.setItem("totalFitnessDays", totalFitnessDays);
+          updateUI();
+        }
+      }
+
+      function completeReader() {
+        if (localStorage.getItem("readerDone") !== "true") {
+          localStorage.setItem("readerDone", "true");
+          let totalReaderDays =
+            parseInt(localStorage.getItem("totalReaderDays") || "0") + 1;
+          localStorage.setItem("totalReaderDays", totalReaderDays);
+          updateUI();
+        }
+      }
+
+      function updateUI() {
+        if (localStorage.getItem("supplementsDone") === "true") {
+          let btn = document.getElementById("supplementsBtn");
+          btn.innerText = "✓ Supplements Taken";
+          btn.className = "action-btn completed";
+        } else {
+          let btn = document.getElementById("supplementsBtn");
+          btn.innerText = "Take Supplements";
+          btn.className = "action-btn";
+        }
+
+        if (localStorage.getItem("jobsDoneToday") === "true") {
+          document.getElementById("jobInputSection").style.display = "none";
+          document.getElementById("jobStatusMsg").style.display = "block";
+        } else {
+          document.getElementById("jobInputSection").style.display = "flex";
+          document.getElementById("jobStatusMsg").style.display = "none";
+        }
+
+        if (localStorage.getItem("fitnessDone") === "true") {
+          let btn = document.getElementById("fitnessBtn");
+          btn.innerText = `✓ Circuit Completed`;
+          btn.className = "action-btn completed";
+        } else {
+          let btn = document.getElementById("fitnessBtn");
+          btn.innerText = "Mark Circuit Done";
+          btn.className = "action-btn";
+        }
+
+        if (localStorage.getItem("readerDone") === "true") {
+          let btn = document.getElementById("readerBtn");
+          btn.innerText = "✓ Read Logged Today";
+          btn.className = "action-btn completed";
+        } else {
+          let btn = document.getElementById("readerBtn");
+          btn.innerText = "Read Today";
+          btn.className = "action-btn";
+        }
+
+        let supplementStreak = localStorage.getItem("supplementsStreak") || "0";
+        let jobStreak = localStorage.getItem("jobStreak") || "0";
+        let totalJobs = localStorage.getItem("totalJobsApplied") || "0";
+
+        document.getElementById("supplementsStats").innerText =
+          `🔥 Streak: ${supplementStreak} days`;
+        document.getElementById("jobStats").innerText =
+          `Total Applied: ${totalJobs} | 🔥 Streak: ${jobStreak} days`;
+        document.getElementById("fitnessStats").innerText =
+          `Tracked: ${localStorage.getItem("totalFitnessDays") || "0"} / 61 days (Aug - Sept)`;
+        document.getElementById("readerStats").innerText =
+          `Tracked: ${localStorage.getItem("totalReaderDays") || "0"} / 61 days (Aug - Sept)`;
+      }
+
+      updateUI();
     </script>
-</body>
+  </body>
 </html>
