@@ -198,6 +198,45 @@
         margin-top: 10px;
       }
 
+      .button-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .button-row .action-btn {
+        flex: 1;
+        width: auto;
+        margin-top: 0;
+      }
+
+      .secondary-btn {
+        background: transparent;
+        border: 1px solid #334155;
+        color: var(--text-color);
+        padding: 12px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+
+      .secondary-btn:active {
+        transform: scale(0.98);
+      }
+
+      .note-input {
+        width: 100%;
+        min-height: 120px;
+        resize: vertical;
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        font: inherit;
+      }
+
       .action-btn:active {
         transform: scale(0.98);
       }
@@ -251,6 +290,20 @@
         min-width: 120px;
         background: #0f172a;
         padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #334155;
+      }
+
+      .sunrise-sunset-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .sunrise-sunset-box {
+        background: #0f172a;
+        padding: 10px;
         border-radius: 8px;
         text-align: center;
         border: 1px solid #334155;
@@ -377,7 +430,6 @@
       .float-btn:active {
         transform: scale(0.95);
       }
-
     </style>
   </head>
   <body>
@@ -386,7 +438,7 @@
       <div id="mainPage" class="page active">
         <!-- CATEGORY: OVERVIEW & TIME -->
         <div class="category-section">
-          <h2 class="category-title">Overview & Time</h2>
+          <h2 class="category-title">Date & Time</h2>
           <div class="card-grid">
             <div class="card" style="grid-column: 1 / -1">
               <div class="card-header-row">
@@ -414,22 +466,51 @@
               </div>
               <div class="date-display" id="dateDisplay">Loading date...</div>
             </div>
+
+            <div class="card" style="grid-column: 1 / -1">
+              <div class="card-header-row">
+                <h3>🌅 Sunrise & Sunset</h3>
+              </div>
+              <div class="sunrise-sunset-grid">
+                <div class="sunrise-sunset-box">
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
+                    Sunrise
+                  </div>
+                  <div class="clock-time" id="sunriseValue">--:--</div>
+                </div>
+                <div class="sunrise-sunset-box">
+                  <div style="font-size: 0.75rem; color: var(--text-muted)">
+                    Sunset
+                  </div>
+                  <div class="clock-time" id="sunsetValue">--:--</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- CATEGORY: ENVIRONMENT & FINANCE -->
         <div class="category-section">
-          <h2 class="category-title">Environment & Finance</h2>
+          <h2 class="category-title">Weather Preparation</h2>
           <div class="card-grid">
             <div class="card">
               <div class="card-header-row">
-                <h3>🌤️ Weather & Recommendations</h3>
+                <h3>🌤️ Temperature</h3>
+                <button
+                  class="edit-icon-btn"
+                  onclick="fetchEnvironmentData()"
+                  title="Refresh weather"
+                >
+                  ↻
+                </button>
               </div>
               <div class="weather-info">
                 <span class="highlight" id="currentTemp">--°C</span>
                 (Current)<br />
+                Feels like: <strong id="feelsLikeTemp">--°C</strong><br />
                 High: <strong id="highTemp">--°C</strong><br />
                 Low: <strong id="lowTemp">--°C</strong><br />
+                Wind: <strong id="windSpeed">-- km/h</strong><br />
                 <div
                   id="weatherForecast"
                   style="margin-top: 8px; color: var(--text-muted)"
@@ -441,7 +522,7 @@
 
             <div class="card">
               <div class="card-header-row">
-                <h3>🌦️ Weather Advice</h3>
+                <h3>🌦️ Advice</h3>
               </div>
               <div
                 id="weatherAdvice"
@@ -494,6 +575,7 @@
                 </button>
               </div>
               <p
+                id="supplementsStatus"
                 style="
                   color: var(--text-muted);
                   font-size: 0.85rem;
@@ -578,13 +660,18 @@
               >
                 Daily reading session
               </p>
-              <button
-                id="readerBtn"
-                class="action-btn"
-                onclick="completeReader()"
-              >
-                Read Today
-              </button>
+              <div class="button-row">
+                <button
+                  id="readerBtn"
+                  class="action-btn"
+                  onclick="completeReader()"
+                >
+                  Read Today
+                </button>
+                <button class="secondary-btn" onclick="openObsidian()">
+                  Open Obsidian
+                </button>
+              </div>
               <div class="tracker-stats" id="readerStats">
                 Tracked: 0 / 61 days (Aug - Sept)
               </div>
@@ -860,20 +947,37 @@
 
       async function getWeatherData(lat, lon) {
         try {
-          let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+          let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&wind_speed_unit=kmh`;
           let response = await fetch(url);
           let data = await response.json();
-
+          console.log({ url });
           let currentTemp = Math.round(data.current.temperature_2m);
+          let feelsLikeTemp = Math.round(data.current.apparent_temperature);
           let highTemp = Math.round(data.daily.temperature_2m_max[0]);
           let lowTemp = Math.round(data.daily.temperature_2m_min[0]);
           let precipitation = data.current.precipitation;
+          let windSpeed = Math.round(data.current.wind_speed_10m || 0);
+          let sunrise = data.daily.sunrise?.[0];
+          let sunset = data.daily.sunset?.[0];
 
           document.getElementById("currentTemp").innerText = `${currentTemp}°C`;
+          document.getElementById("feelsLikeTemp").innerText =
+            `${feelsLikeTemp}°C`;
           document.getElementById("highTemp").innerText = `${highTemp}°C`;
           document.getElementById("lowTemp").innerText = `${lowTemp}°C`;
+          document.getElementById("windSpeed").innerText = `${windSpeed} km/h`;
           document.getElementById("weatherForecast").innerText =
             `Forecast: ${getWeatherForecast(currentTemp, precipitation, highTemp, lowTemp)}`;
+
+          if (sunrise && sunset) {
+            document.getElementById("sunriseValue").innerText =
+              formatTimeValue(sunrise);
+            document.getElementById("sunsetValue").innerText =
+              formatTimeValue(sunset);
+          } else {
+            document.getElementById("sunriseValue").innerText = "--:--";
+            document.getElementById("sunsetValue").innerText = "--:--";
+          }
 
           generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation);
         } catch (error) {
@@ -882,12 +986,21 @@
         }
       }
 
+      function formatTimeValue(value) {
+        const date = new Date(value);
+        return date.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      }
+
       async function getPollenData(lat, lon) {
         try {
           let url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=grass_pollen,birch_pollen,ragweed_pollen&timezone=auto`;
           let response = await fetch(url);
           let data = await response.json();
-
+          console.log({ url });
           let birch = data.current.birch_pollen ?? 0;
           let grass = data.current.grass_pollen ?? 0;
           let ragweed = data.current.ragweed_pollen ?? 0;
@@ -1352,7 +1465,27 @@
         }
       }
 
+      function openObsidian() {
+        try {
+          window.location.href = "obsidian://open?vault=maccs";
+          window.setTimeout(() => {
+            window.open("https://obsidian.md", "_blank", "noopener,noreferrer");
+          }, 1200);
+        } catch (error) {
+          window.open("https://obsidian.md", "_blank", "noopener,noreferrer");
+        }
+      }
+
       function updateUI() {
+        const supplementsStatusEl =
+          document.getElementById("supplementsStatus");
+        if (supplementsStatusEl) {
+          supplementsStatusEl.innerText =
+            localStorage.getItem("supplementsDone") === "true"
+              ? "Status: Taken"
+              : "Status: Pending intake";
+        }
+
         if (localStorage.getItem("supplementsDone") === "true") {
           let btn = document.getElementById("supplementsBtn");
           btn.innerText = "✓ Supplements Taken";
@@ -1400,7 +1533,7 @@
         document.getElementById("jobStats").innerText =
           `Total Applied: ${totalJobs} | 🔥 Streak: ${jobStreak} days`;
         document.getElementById("fitnessStats").innerText =
-          `Tracked: ${localStorage.getItem("totalFitnessDays") || "0"} / 61 days (Aug - Sept)`;
+          `🔥 Streak: ${localStorage.getItem("totalFitnessDays") || "0"} days`;
         document.getElementById("readerStats").innerText =
           `Tracked: ${localStorage.getItem("totalReaderDays") || "0"} / 61 days (Aug - Sept)`;
       }
