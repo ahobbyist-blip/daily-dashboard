@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Daily Dashboard</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <title>My Daily Command Center</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -34,7 +37,11 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            padding-bottom: 70px; /* Space for floating button */
+            padding-bottom: 70px;
+            height: calc(100vh - 24px);
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
         }
 
         .page {
@@ -42,6 +49,20 @@
             flex-direction: column;
             gap: 20px;
             width: 100%;
+        }
+
+        .page.active {
+            display: flex;
+            min-height: 100%;
+        }
+
+        .category-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-snap-align: start;
+            min-height: calc(100vh - 40px);
+            padding: 20px 0;
         }
 
         .page.active {
@@ -71,6 +92,15 @@
         }
 
         @media (min-width: 600px) {
+            .dashboard-container {
+                height: auto;
+                overflow-y: visible;
+                scroll-snap-type: none;
+            }
+            .category-section {
+                min-height: auto;
+                padding: 0;
+            }
             .card-grid {
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 20px;
@@ -88,15 +118,40 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            position: relative;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
         }
 
         .card h3 {
-            margin-top: 0;
-            margin-bottom: 12px;
+            margin: 0;
             font-size: 1.05rem;
             color: var(--accent);
-            border-bottom: 1px solid #334155;
-            padding-bottom: 6px;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .edit-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .edit-icon-btn:hover {
+            color: var(--accent);
+            background: #0f172a;
         }
 
         .weather-info, .finance-info, .pollen-info {
@@ -114,7 +169,7 @@
             background-color: var(--accent);
             color: var(--bg-color);
             border: none;
-            padding: 14px 20px; /* Larger touch target for mobile */
+            padding: 14px 20px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
@@ -199,15 +254,14 @@
             font-size: 0.9rem;
             color: var(--text-muted);
             margin: 0 0 10px 0;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .pollen-level-low { color: #22c55e; font-weight: bold; }
         .pollen-level-moderate { color: #eab308; font-weight: bold; }
         .pollen-level-high { color: #ef4444; font-weight: bold; }
 
-        /* Shopping Page Specific Styles */
-        .shopping-list {
+        .item-list {
             list-style: none;
             padding: 0;
             margin: 0 0 15px 0;
@@ -215,7 +269,7 @@
             overflow-y: auto;
         }
 
-        .shopping-item {
+        .list-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -227,19 +281,19 @@
             border: 1px solid #334155;
         }
 
-        .shopping-item.checked span {
+        .list-row.checked span {
             text-decoration: line-through;
             color: var(--text-muted);
         }
 
-        .shopping-item-left {
+        .list-row-left {
             display: flex;
             align-items: center;
             gap: 12px;
             overflow: hidden;
         }
 
-        .shopping-item input[type="checkbox"] {
+        .list-row input[type="checkbox"] {
             accent-color: var(--accent);
             cursor: pointer;
             width: 20px;
@@ -259,24 +313,29 @@
             color: var(--danger);
         }
 
-        /* Floating Nav Button Optimized for Mobile Thumbs */
+        /* Floating Navigation & Action Buttons */
         .float-btn {
             position: fixed;
-            bottom: 16px;
-            right: 16px;
+            bottom: 20px;
+            right: 20px;
             background-color: var(--accent);
             color: var(--bg-color);
             border: none;
-            border-radius: 50px;
-            padding: 14px 20px;
-            font-weight: bold;
-            font-size: 0.95rem;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 1.3rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             z-index: 1000;
+            transition: transform 0.2s;
+        }
+
+        .float-btn:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -292,7 +351,9 @@
                 <h2 class="category-title">Overview & Time</h2>
                 <div class="card-grid">
                     <div class="card" style="grid-column: 1 / -1;">
-                        <h3>🕒 World Clocks & Date</h3>
+                        <div class="card-header-row">
+                            <h3>🕒 World Clocks & Date</h3>
+                        </div>
                         <div class="clock-container">
                             <div class="clock-box">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">Local Time</div>
@@ -301,6 +362,10 @@
                             <div class="clock-box">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">India (IST)</div>
                                 <div class="clock-time" id="indiaClock">--:--:--</div>
+                            </div>
+                            <div class="clock-box">
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">EUR-INR</div>
+                                <span class="clock-time" id="eurInrRate">Loading...</span>
                             </div>
                         </div>
                         <div class="date-display" id="dateDisplay">Loading date...</div>
@@ -313,20 +378,30 @@
                 <h2 class="category-title">Environment & Finance</h2>
                 <div class="card-grid">
                     <div class="card">
-                        <h3>🌤️ Weather & Recommendations</h3>
+                        <div class="card-header-row">
+                            <h3>🌤️ Weather & Recommendations</h3>
+                        </div>
                         <div class="weather-info">
                             <span class="highlight" id="currentTemp">--°C</span> (Current)<br>
                             High: <strong id="highTemp">--°C</strong><br>
-                            Low: <strong id="lowTemp">--°C</strong>
+                            Low: <strong id="lowTemp">--°C</strong><br>
+                            <div id="weatherForecast" style="margin-top: 8px; color: var(--text-muted);">Forecast: loading...</div>
                         </div>
-                        <hr style="border: 0; border-top: 1px solid #334155; margin: 12px 0;">
-                        <div id="weatherAdvice" style="font-size: 0.85rem; color: var(--text-muted);">
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header-row">
+                            <h3>🌦️ Weather Advice</h3>
+                        </div>
+                        <div id="weatherAdvice" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
                             Analyzing weather conditions...
                         </div>
                     </div>
 
                     <div class="card">
-                        <h3>🌿 Pollen Levels</h3>
+                        <div class="card-header-row">
+                            <h3>🌿 Pollen Levels</h3>
+                        </div>
                         <div class="pollen-info">
                             Status: <span id="pollenStatus" class="highlight" style="font-size: 1.1rem;">Checking...</span><br>
                             • Birch / Alder: <span id="pollenBirch">--</span><br>
@@ -334,15 +409,6 @@
                             • Ragweed: <span id="pollenRagweed">--</span>
                         </div>
                         <div class="tracker-stats" id="pollenAdvice">Live air quality lookup</div>
-                    </div>
-
-                    <div class="card">
-                        <h3>💱 Currency (EUR to INR)</h3>
-                        <div class="finance-info">
-                            Current Rate: <br>
-                            <span class="highlight" id="eurInrRate">Loading...</span>
-                        </div>
-                        <div class="tracker-stats">Updates live via API</div>
                     </div>
                 </div>
             </div>
@@ -352,14 +418,23 @@
                 <h2 class="category-title">Habits & Productivity</h2>
                 <div class="card-grid">
                     <div class="card">
-                        <h3>💊 Daily Supplements</h3>
+                        <div class="card-header-row">
+                            <h3>💊 Daily Supplements</h3>
+                            <button class="edit-icon-btn" onclick="switchPage('supplements')" title="Edit Supplements">⚙️</button>
+                        </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Status: Pending intake</p>
+                        <div class="finance-info">
+                            Tracking: <br>
+                            <span class="highlight" id="supplementsCountDashboard">0</span> supplement<span id="supplementsCountPlural">s</span>
+                        </div>
                         <button id="supplementsBtn" class="action-btn" onclick="completeSupplements()">Take Supplements</button>
                         <div class="tracker-stats" id="supplementsStats">🔥 Streak: 0 days</div>
                     </div>
 
                     <div class="card">
-                        <h3>💼 Job Applications</h3>
+                        <div class="card-header-row">
+                            <h3>💼 Job Applications</h3>
+                        </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Log jobs applied for today</p>
                         <div class="input-group" id="jobInputSection">
                             <input type="number" id="jobCountInput" min="1" placeholder="e.g., 3" value="1">
@@ -370,7 +445,9 @@
                     </div>
 
                     <div class="card">
-                        <h3>📚 Project Reader</h3>
+                        <div class="card-header-row">
+                            <h3>📚 Project Reader</h3>
+                        </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 5px 0;">Daily reading session</p>
                         <button id="readerBtn" class="action-btn" onclick="completeReader()">Read Today</button>
                         <div class="tracker-stats" id="readerStats">Tracked: 0 / 61 days (Aug - Sept)</div>
@@ -383,16 +460,15 @@
                 <h2 class="category-title">Fitness</h2>
                 <div class="card-grid">
                     <div class="card">
-                        <h3>💪 Daily Fitness Circuit</h3>
-                        <div class="fitness-list">
-                            • Push-ups: <span id="pushupTarget" style="color: #fff; font-weight: bold;">10</span> reps<br>
-                            • Squats: <span id="squatTarget" style="color: #fff; font-weight: bold;">15</span> reps<br>
-                            • Leg Raises: <span id="legRaiseTarget" style="color: #fff; font-weight: bold;">12</span> reps<br>
-                            • Climbs: <span id="climbTarget" style="color: #fff; font-weight: bold;">20</span> reps<br>
-                            • Planks: <span id="plankTarget" style="color: #fff; font-weight: bold;">45</span> sec
+                        <div class="card-header-row">
+                            <h3>💪 Daily Fitness Circuit</h3>
+                            <button class="edit-icon-btn" onclick="switchPage('exercise')" title="Edit Circuit">⚙️</button>
                         </div>
-                        <button id="pushupBtn" class="action-btn" onclick="completePushups()">Mark Circuit Done</button>
-                        <div class="tracker-stats" id="pushupStats">Tracked: 0 / 61 days (Aug - Sept)</div>
+                        <div class="fitness-list" id="dashboardFitnessList">
+                            <!-- Rendered dynamically via JS -->
+                        </div>
+                        <button id="fitnessBtn" class="action-btn" onclick="completeFitness()">Mark Circuit Done</button>
+                        <div class="tracker-stats" id="fitnessStats">Tracked: 0 / 61 days (Aug - Sept)</div>
                     </div>
                 </div>
             </div>
@@ -402,12 +478,14 @@
                 <h2 class="category-title">Shopping Overview</h2>
                 <div class="card-grid">
                     <div class="card">
-                        <h3>🛒 Shopping Summary</h3>
+                        <div class="card-header-row">
+                            <h3>🛒 Shopping Summary</h3>
+                        </div>
                         <div class="finance-info">
                             Items to Buy: <br>
                             <span class="highlight" id="shoppingCountDashboard">0 items</span>
                         </div>
-                        <button class="action-btn" onclick="togglePage()" style="margin-top: 15px;">Open Shopping List</button>
+                        <button class="action-btn" onclick="switchPage('shopping')" style="margin-top: 15px;">Open Shopping List</button>
                     </div>
                 </div>
             </div>
@@ -419,10 +497,10 @@
             <div class="category-section">
                 <h2 class="category-title">Shopping Management</h2>
                 <div class="card" style="width: 100%;">
-                    <h3>🛒 Grocery & Shopping List</h3>
-                    <ul class="shopping-list" id="shoppingListContainer">
-                        <!-- Items rendered via JS -->
-                    </ul>
+                    <div class="card-header-row">
+                        <h3>🛒 Grocery & Shopping List</h3>
+                    </div>
+                    <ul class="item-list" id="shoppingListContainer"></ul>
                     <div class="input-group">
                         <input type="text" id="newItemInput" placeholder="Add new item..." onkeypress="handleShoppingKey(event)">
                         <button class="action-btn" style="margin-top:0;" onclick="addShoppingItem()">Add</button>
@@ -432,32 +510,97 @@
             </div>
         </div>
 
+        <!-- PAGE 3: EXERCISE MANAGER PAGE -->
+        <div id="exercisePage" class="page">
+            <div class="category-section">
+                <h2 class="category-title">Circuit Manager</h2>
+                <div class="card" style="width: 100%;">
+                    <div class="card-header-row">
+                        <h3>💪 Manage Circuit Exercises</h3>
+                    </div>
+                    <ul class="item-list" id="exerciseListContainer"></ul>
+                    <div class="input-group">
+                        <input type="text" id="newExerciseInput" placeholder="e.g., Push-ups: 15 reps" onkeypress="handleExerciseKey(event)">
+                        <button class="action-btn" style="margin-top:0;" onclick="addFitnessExercise()">Add</button>
+                    </div>
+                    <div class="tracker-stats" style="margin-top: 15px;">Add, remove or edit your daily circuit exercises here</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: SUPPLEMENTS MANAGER PAGE -->
+        <div id="supplementsPage" class="page">
+            <div class="category-section">
+                <h2 class="category-title">Supplement Tracker</h2>
+                <div class="card" style="width: 100%;">
+                    <div class="card-header-row">
+                        <h3>💊 Your Supplement List</h3>
+                    </div>
+                    <ul class="item-list" id="supplementsListContainer"></ul>
+                    <div class="input-group">
+                        <input type="text" id="newSupplementInput" placeholder="Add new supplement..." onkeypress="handleSupplementKey(event)">
+                        <button class="action-btn" style="margin-top:0;" onclick="addSupplementItem()">Add</button>
+                    </div>
+                    <div class="tracker-stats" style="margin-top: 15px;">Use this page like your exercise list: add supplements and delete items when they are no longer tracked.</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- FLOATING NAVIGATION BUTTON -->
-    <button class="float-btn" id="navFloatBtn" onclick="togglePage()">🛒 Shopping List</button>
+    <button class="float-btn" id="floatNavBtn" onclick="toggleMainNavigation()" title="Open Shopping">🛒</button>
 
     <script>
-        // --- PAGE ROUTING / TOGGLE ---
+        // --- PAGE ROUTING SYSTEM ---
         let currentPage = 'main';
 
-        function togglePage() {
+        function switchPage(targetPage) {
             const mainPage = document.getElementById('mainPage');
             const shoppingPage = document.getElementById('shoppingPage');
-            const floatBtn = document.getElementById('navFloatBtn');
+            const exercisePage = document.getElementById('exercisePage');
+            const supplementsPage = document.getElementById('supplementsPage');
+            const floatBtn = document.getElementById('floatNavBtn');
+            
+            mainPage.classList.remove('active');
+            shoppingPage.classList.remove('active');
+            exercisePage.classList.remove('active');
+            supplementsPage.classList.remove('active');
 
-            if (currentPage === 'main') {
-                mainPage.classList.remove('active');
-                shoppingPage.classList.add('active');
-                floatBtn.innerHTML = '🏠 Dashboard';
-                currentPage = 'shopping';
-                renderShoppingList();
-            } else {
-                shoppingPage.classList.remove('active');
+            if (targetPage === 'main') {
                 mainPage.classList.add('active');
-                floatBtn.innerHTML = '🛒 Shopping List';
                 currentPage = 'main';
+                floatBtn.innerHTML = '⫶☰';
+                floatBtn.setAttribute('title', 'Open Shopping');
                 updateDashboardShoppingCount();
+                renderDashboardFitnessList();
+                updateUI();
+            } else if (targetPage === 'shopping') {
+                shoppingPage.classList.add('active');
+                currentPage = 'shopping';
+                floatBtn.innerHTML = '🏠︎';
+                floatBtn.setAttribute('title', 'Back to Dashboard');
+                renderShoppingList();
+            } else if (targetPage === 'exercise') {
+                exercisePage.classList.add('active');
+                currentPage = 'exercise';
+                floatBtn.innerHTML = '🏠︎';
+                floatBtn.setAttribute('title', 'Back to Dashboard');
+                renderExerciseList();
+            } else if (targetPage === 'supplements') {
+                supplementsPage.classList.add('active');
+                currentPage = 'supplements';
+                floatBtn.innerHTML = '🏠︎';
+                floatBtn.setAttribute('title', 'Back to Dashboard');
+                renderSupplementsPage();
+            }
+        }
+
+        function toggleMainNavigation() {
+            if (currentPage === 'main') {
+                switchPage('shopping');
+            } else {
+                switchPage('main');
             }
         }
 
@@ -509,6 +652,7 @@
                 document.getElementById('currentTemp').innerText = `${currentTemp}°C`;
                 document.getElementById('highTemp').innerText = `${highTemp}°C`;
                 document.getElementById('lowTemp').innerText = `${lowTemp}°C`;
+                document.getElementById('weatherForecast').innerText = `Forecast: ${getWeatherForecast(currentTemp, precipitation, highTemp, lowTemp)}`;
 
                 generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation);
             } catch (error) {
@@ -553,6 +697,42 @@
             }
         }
         fetchEnvironmentData();
+        registerServiceWorker();
+
+        function getWeatherForecast(current, precipitation, high, low) {
+            if (precipitation >= 5) {
+                return '⛈️ Heavy rain';
+            }
+            if (precipitation >= 1) {
+                return '🌧️ Rainy';
+            }
+            if (precipitation > 0) {
+                return '🌦️ Light rain / drizzle';
+            }
+
+            const range = high - low;
+            if (current >= 28) {
+                return '☀️ Sunny';
+            }
+            if (current >= 20) {
+                return range > 10 ? '🌤️ Mostly sunny with some clouds' : '☀️ Sunny to partly cloudy';
+            }
+            if (current >= 10) {
+                return '⛅ Partly cloudy';
+            }
+            if (current >= 0) {
+                return '🌥️ Cool and cloudy';
+            }
+            return '🌫️ Cold and foggy';
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(() => console.log('Service Worker registered'))
+                    .catch(err => console.warn('Service Worker registration failed:', err));
+            }
+        }
 
         function generateSmartAdvice(current, high, low, rain) {
             let wearText = "";
@@ -601,54 +781,183 @@
         }
         fetchExchangeRate();
 
-        // --- 3. DYNAMIC FITNESS TARGETS ---
-        function getDailyFitnessTargets() {
-            const startDate = new Date(new Date().getFullYear(), 7, 1);
-            const today = new Date();
-            const diffTime = Math.abs(today - startDate);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            let pushups = 10 + ((diffDays % 6) * 3); 
-            if (pushups > 25) pushups = 25;
+        // --- 3. FITNESS CIRCUIT MANAGER LOGIC ---
+        let defaultExercises = [
+            "Push-ups",
+            "Squats",
+            "Leg Raises",
+            "Climbs",
+            "Planks"
+        ];
+        let fitnessList = JSON.parse(localStorage.getItem('fitnessList') || JSON.stringify(defaultExercises));
 
-            let squats = 15 + ((diffDays % 6) * 3); 
-            if (squats > 30) squats = 30;
+        function renderDashboardFitnessList() {
+            const container = document.getElementById('dashboardFitnessList');
+            if (!container) return;
+            container.innerHTML = '';
 
-            let legRaises = 12 + ((diffDays % 6) * 2); 
-            if (legRaises > 24) legRaises = 24;
+            if (fitnessList.length === 0) {
+                container.innerHTML = '• No exercises in circuit.';
+                return;
+            }
 
-            let climbs = 20 + ((diffDays % 6) * 4); 
-            if (climbs > 40) climbs = 40;
-
-            let planks = 45 + ((diffDays % 6) * 5); 
-            if (planks > 75) planks = 75;
-
-            return { pushups, squats, legRaises, climbs, planks };
+            fitnessList.forEach(ex => {
+                const div = document.createElement('div');
+                div.innerHTML = `• ${ex}`;
+                container.appendChild(div);
+            });
         }
 
-        const targets = getDailyFitnessTargets();
-        document.getElementById('pushupTarget').innerText = targets.pushups;
-        document.getElementById('squatTarget').innerText = targets.squats;
-        document.getElementById('legRaiseTarget').innerText = targets.legRaises;
-        document.getElementById('climbTarget').innerText = targets.climbs;
-        document.getElementById('plankTarget').innerText = targets.planks + 's';
+        let supplementsList = JSON.parse(localStorage.getItem('supplementsList') || '[]');
+
+        function renderDashboardSupplementCount() {
+            const countEl = document.getElementById('supplementsCountDashboard');
+            const pluralEl = document.getElementById('supplementsCountPlural');
+            const count = supplementsList.length;
+            if (countEl) countEl.innerText = count;
+            if (pluralEl) pluralEl.innerText = count === 1 ? '' : 's';
+        }
+
+        function renderSupplementsPage() {
+            renderDashboardSupplementCount();
+
+            const container = document.getElementById('supplementsListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (supplementsList.length === 0) {
+                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No supplements tracked yet</li>';
+                return;
+            }
+
+            supplementsList.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-row';
+                li.innerHTML = `
+                    <div class="list-row-left">
+                        <span>${item}</span>
+                    </div>
+                    <button class="delete-item-btn" onclick="deleteSupplementItem(${index})">✕</button>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        function addSupplementItem() {
+            const input = document.getElementById('newSupplementInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            supplementsList.push(text);
+            input.value = '';
+            saveSupplementsList();
+            renderSupplementsPage();
+        }
+
+        function handleSupplementKey(event) {
+            if (event.key === 'Enter') {
+                addSupplementItem();
+            }
+        }
+
+        function deleteSupplementItem(index) {
+            supplementsList.splice(index, 1);
+            saveSupplementsList();
+            renderSupplementsPage();
+        }
+
+        function saveSupplementsList() {
+            localStorage.setItem('supplementsList', JSON.stringify(supplementsList));
+        }
+
+        renderDashboardSupplementCount();
+
+        function renderExerciseList() {
+            const container = document.getElementById('exerciseListContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (fitnessList.length === 0) {
+                container.innerHTML = '<li style="text-align:center; color: var(--text-muted); font-size: 0.9rem; padding: 20px;">No exercises added</li>';
+                return;
+            }
+
+            fitnessList.forEach((ex, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-row';
+                li.innerHTML = `
+                    <div class="list-row-left">
+                        <span>${ex}</span>
+                    </div>
+                    <button class="delete-item-btn" onclick="deleteFitnessExercise(${index})">✕</button>
+                `;
+                container.appendChild(li);
+            });
+        }
+
+        function addFitnessExercise() {
+            const input = document.getElementById('newExerciseInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            fitnessList.push(text);
+            input.value = '';
+            saveFitnessList();
+            renderExerciseList();
+            renderDashboardFitnessList();
+        }
+
+        function handleExerciseKey(event) {
+            if (event.key === 'Enter') {
+                addFitnessExercise();
+            }
+        }
+
+        function deleteFitnessExercise(index) {
+            fitnessList.splice(index, 1);
+            saveFitnessList();
+            renderExerciseList();
+            renderDashboardFitnessList();
+        }
+
+        function saveFitnessList() {
+            localStorage.setItem('fitnessList', JSON.stringify(fitnessList));
+        }
+
+        renderDashboardFitnessList();
 
         // --- 4. SHOPPING LIST LOGIC ---
-        let shoppingList = JSON.parse(localStorage.getItem('shoppingList') || '[]');
+        let shoppingList = loadShoppingList();
 
-        function cleanShoppingList() {
-            const now = new Date().getTime();
+        function loadShoppingList() {
+            try {
+                return JSON.parse(localStorage.getItem('shoppingList')) || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function cleanAndSortShoppingList() {
+            const now = Date.now();
             const oneDayMs = 24 * 60 * 60 * 1000;
-            
+
             shoppingList = shoppingList.filter(item => {
                 if (!item.checked || !item.checkedAt) return true;
                 return (now - item.checkedAt) < oneDayMs;
             });
-            saveShoppingList();
+
+            shoppingList.sort((a, b) => {
+                if (a.checked !== b.checked) {
+                    return a.checked ? 1 : -1;
+                }
+                if (a.checked && b.checked) {
+                    return (a.checkedAt || 0) - (b.checkedAt || 0);
+                }
+                return 0;
+            });
         }
 
         function updateDashboardShoppingCount() {
-            cleanShoppingList();
             const uncheckedCount = shoppingList.filter(item => !item.checked).length;
             const countEl = document.getElementById('shoppingCountDashboard');
             if (countEl) {
@@ -657,8 +966,9 @@
         }
 
         function renderShoppingList() {
-            cleanShoppingList();
+            cleanAndSortShoppingList();
             updateDashboardShoppingCount();
+
             const container = document.getElementById('shoppingListContainer');
             if (!container) return;
             container.innerHTML = '';
@@ -670,11 +980,11 @@
 
             shoppingList.forEach((item, index) => {
                 const li = document.createElement('li');
-                li.className = `shopping-item ${item.checked ? 'checked' : ''}`;
+                li.className = `list-row ${item.checked ? 'checked' : ''}`;
                 
                 li.innerHTML = `
-                    <div class="shopping-item-left">
-                        <input type="checkbox" ${item.checked ? 'checked' : ''} onclick="toggleShoppingItem(${index})">
+                    <div class="list-row-left">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleShoppingItem(${index})">
                         <span>${item.text}</span>
                     </div>
                     <button class="delete-item-btn" onclick="deleteShoppingItem(${index})">✕</button>
@@ -701,8 +1011,9 @@
         }
 
         function toggleShoppingItem(index) {
+            if (!shoppingList[index]) return;
             shoppingList[index].checked = !shoppingList[index].checked;
-            shoppingList[index].checkedAt = shoppingList[index].checked ? new Date().getTime() : null;
+            shoppingList[index].checkedAt = shoppingList[index].checked ? Date.now() : null;
             saveShoppingList();
             renderShoppingList();
         }
@@ -714,11 +1025,12 @@
         }
 
         function saveShoppingList() {
+            cleanAndSortShoppingList();
             localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
             updateDashboardShoppingCount();
         }
 
-        updateDashboardShoppingCount();
+        renderShoppingList();
 
         // --- 5. LOCAL STORAGE & STREAK LOGIC ---
         const todayKey = new Date().toISOString().slice(0, 10);
@@ -740,7 +1052,7 @@
                 }
 
                 localStorage.setItem('supplementsDone', 'false');
-                localStorage.setItem('pushupsDone', 'false');
+                localStorage.setItem('fitnessDone', 'false');
                 localStorage.setItem('readerDone', 'false');
                 localStorage.setItem('jobsDoneToday', 'false');
                 localStorage.setItem('lastActiveDate', todayKey);
@@ -772,11 +1084,11 @@
             updateUI();
         }
 
-        function completePushups() {
-            if (localStorage.getItem('pushupsDone') !== 'true') {
-                localStorage.setItem('pushupsDone', 'true');
-                let totalPushupDays = parseInt(localStorage.getItem('totalPushupDays') || '0') + 1;
-                localStorage.setItem('totalPushupDays', totalPushupDays);
+        function completeFitness() {
+            if (localStorage.getItem('fitnessDone') !== 'true') {
+                localStorage.setItem('fitnessDone', 'true');
+                let totalFitnessDays = parseInt(localStorage.getItem('totalFitnessDays') || '0') + 1;
+                localStorage.setItem('totalFitnessDays', totalFitnessDays);
                 updateUI();
             }
         }
@@ -795,23 +1107,38 @@
                 let btn = document.getElementById('supplementsBtn');
                 btn.innerText = '✓ Supplements Taken';
                 btn.className = 'action-btn completed';
+            } else {
+                let btn = document.getElementById('supplementsBtn');
+                btn.innerText = 'Take Supplements';
+                btn.className = 'action-btn';
             }
 
             if (localStorage.getItem('jobsDoneToday') === 'true') {
                 document.getElementById('jobInputSection').style.display = 'none';
                 document.getElementById('jobStatusMsg').style.display = 'block';
+            } else {
+                document.getElementById('jobInputSection').style.display = 'flex';
+                document.getElementById('jobStatusMsg').style.display = 'none';
             }
 
-            if (localStorage.getItem('pushupsDone') === 'true') {
-                let btn = document.getElementById('pushupBtn');
+            if (localStorage.getItem('fitnessDone') === 'true') {
+                let btn = document.getElementById('fitnessBtn');
                 btn.innerText = `✓ Circuit Completed`;
                 btn.className = 'action-btn completed';
+            } else {
+                let btn = document.getElementById('fitnessBtn');
+                btn.innerText = 'Mark Circuit Done';
+                btn.className = 'action-btn';
             }
 
             if (localStorage.getItem('readerDone') === 'true') {
                 let btn = document.getElementById('readerBtn');
                 btn.innerText = '✓ Read Logged Today';
                 btn.className = 'action-btn completed';
+            } else {
+                let btn = document.getElementById('readerBtn');
+                btn.innerText = 'Read Today';
+                btn.className = 'action-btn';
             }
 
             let supplementStreak = localStorage.getItem('supplementsStreak') || '0';
@@ -820,7 +1147,7 @@
 
             document.getElementById('supplementsStats').innerText = `🔥 Streak: ${supplementStreak} days`;
             document.getElementById('jobStats').innerText = `Total Applied: ${totalJobs} | 🔥 Streak: ${jobStreak} days`;
-            document.getElementById('pushupStats').innerText = `Tracked: ${localStorage.getItem('totalPushupDays') || '0'} / 61 days (Aug - Sept)`;
+            document.getElementById('fitnessStats').innerText = `Tracked: ${localStorage.getItem('totalFitnessDays') || '0'} / 61 days (Aug - Sept)`;
             document.getElementById('readerStats').innerText = `Tracked: ${localStorage.getItem('totalReaderDays') || '0'} / 61 days (Aug - Sept)`;
         }
 
