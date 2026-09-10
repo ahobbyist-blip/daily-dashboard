@@ -63,7 +63,7 @@ body {
   flex-direction: column;
   gap: 12px;
   scroll-snap-align: start;
-  min-height: calc(100vh - 40px);
+  min-height: auto;
   padding: 20px 0;
 }
 
