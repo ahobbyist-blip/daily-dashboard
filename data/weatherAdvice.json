@@ -1,77 +1,77 @@
 {
   "temperature": [
     { "min": -100, "max": -10, "label": "extreme_cold", "advice": {
-      "wear": "🧣 Extreme cold: heavy coat, thermal layers, insulated boots.",
-      "carry": "❄️ Keep hand warmers and extra layers; limit outdoor exposure.",
-      "travel": "🚗 High risk of snowdrifts — avoid non-essential travel.",
-      "home": "🏠 Protect pipes; ensure heating is on and vents clear."
+      "wear": "🧣 Heavy coat, thermal layers.",
+      "carry": "❄️ Hand warmers, extra layer.",
+      "travel": "🚗 Avoid non-essential travel.",
+      "home": "🏠 Keep heating on."
     }},
     { "min": -10, "max": 0, "label": "freezing", "advice": {
-      "wear": "🧥 Freezing temps: warm coat, hat, gloves, sturdy footwear.",
-      "carry": "🌂 Carry traction aids for shoes if walking on untreated surfaces.",
-      "travel": "⚠️ Watch for black ice in mornings and evenings.",
-      "home": "🔥 Keep a backup heat plan and check vehicle antifreeze."
+      "wear": "🧥 Warm coat, hat, gloves.",
+      "carry": "🧤 Traction aids for shoes.",
+      "travel": "⚠️ Watch for black ice.",
+      "home": "🔥 Check antifreeze."
     }},
     { "min": 0, "max": 5, "label": "very_cold", "advice": {
-      "wear": "🧥 Very cold: coat and layers recommended.",
-      "carry": "🌂 Umbrella or light waterproofing if precipitation expected.",
-      "travel": "⚠️ Be cautious: slushy roads can hide patches of ice.",
-      "home": "🏠 Dry entryways to reduce indoor slip risk."
+      "wear": "🧥 Coat and layers.",
+      "carry": "🌂 Waterproof if precipitation expected.",
+      "travel": "⚠️ Slushy roads may be slippery.",
+      "home": "🏠 Dry entryways."
     }},
-    { "min": 5, "max": 15, "label": "cool", "advice": {
-      "wear": "🧣 Cool weather: jacket or sweater recommended.",
-      "carry": "🌂 Consider a light waterproof layer if wind/rain expected.",
-      "travel": "✔️ Normal travel with rain precautions.",
-      "home": "🪟 Ventilate in the morning; close windows if heavy rain or strong winds."
+    { "min": 5, "max": 16, "label": "cool", "advice": {
+      "wear": "🧣 Jacket or sweater.",
+      "carry": "🌂 Light waterproof if needed.",
+      "travel": "✔️ Normal travel; take rain caution.",
+      "home": "🪟 Close windows in storms."
     }},
-    { "min": 15, "max": 999, "label": "warm", "advice": {
-      "wear": "👕 T-shirt weather. Light layers work well.",
-      "carry": "🧴 Sunglasses and sunscreen if sunny.",
+    { "min": 16, "max": 999, "label": "warm", "advice": {
+      "wear": "👕 T-shirt or light layers.",
+      "carry": "🧴 Sunglasses, sunscreen.",
       "travel": "✔️ Good travel conditions.",
-      "home": "🏠 During heatwaves: keep blinds/curtains closed during midday, ventilate early morning/evening, use fans or AC to maintain cool interior."
+      "home": "🏠 Close blinds midday; ventilate mornings."
     }}
   ],
   "precipitation": {
     "heavy_rain": {
-      "carry": "🌧️ Heavy rain: waterproof coat and umbrella.",
-      "travel": "🚧 Flooding risk — avoid low-lying roads and drive slowly.",
-      "home": "🧰 Check drainage and clear gutters if safe."
+      "carry": "🌧️ Waterproof coat, umbrella.",
+      "travel": "🚧 Avoid low roads; drive slowly.",
+      "home": "🧰 Check drains."
     },
     "light_rain": {
-      "carry": "🌦️ Light rain: small umbrella or water-resistant jacket.",
-      "travel": "🚗 Wet roads — increase stopping distance.",
-      "home": "🪟 Dry shoes and mats to avoid slips indoors."
+      "carry": "🌦️ Small umbrella or jacket.",
+      "travel": "🚗 Wet roads - increase distance.",
+      "home": "🪟 Dry mats and shoes."
     },
     "snowfall": {
-      "carry": "❄️ Snow: insulated boots, warm gloves, and hat.",
-      "travel": "🚗 Snowy roads — consider snow tires/chains and reduced speed.",
-      "home": "🏠 Clear paths and keep salt or grit handy."
+      "carry": "❄️ Warm boots, gloves.",
+      "travel": "🚗 Drive slowly; use chains if needed.",
+      "home": "🏠 Clear paths."
     },
     "flurries": {
-      "carry": "🌨️ Flurries: light warm layer and good footwear.",
-      "travel": "⚠️ Brief slippery patches possible; drive carefully.",
-      "home": "🧯 Keep entryways swept and dry."
+      "carry": "🌨️ Light warm layer.",
+      "travel": "⚠️ Brief slippery patches possible.",
+      "home": "🏠 Dry entryways."
     },
     "sleet": {
-      "carry": "🧥 Sleet: waterproof outer layer and good traction footwear.",
-      "travel": "⚠️ Slippery roads — avoid sudden braking.",
-      "home": "🧰 Remove standing water to prevent freezing."
+      "carry": "🧥 Waterproof outer, grip shoes.",
+      "travel": "⚠️ Slippery roads - avoid sudden braking.",
+      "home": "🧰 Remove standing water."
     },
     "black_ice": {
-      "travel": "🚨 Black ice risk: extremely slippery surfaces — avoid driving if possible.",
-      "footwear": "🥿 Use shoes with good grip; walk slowly and test footing.",
-      "home": "🧂 Keep grit/salt available for steps and porches."
+      "travel": "🚨 Avoid driving if possible.",
+      "footwear": "🥿 Shoes with good grip.",
+      "home": "🧂 Keep salt/grit ready."
     }
   },
   "moisture": {
-    "very_dry": "🫧 Very dry air: moisturize generously, especially after washing; consider a humidifier indoors.",
-    "dry": "🧴 Dry conditions: use a richer moisturizer and keep lips protected.",
-    "moderate": "🧼 Moderate air: maintain normal hydration and use moisturizer if your skin feels tight.",
-    "humid": "💧 Humid conditions: lighter moisturizer is fine; avoid overloading heavy creams if you feel greasy."
+    "very_dry": "🫧 Moisturize; consider a humidifier.",
+    "dry": "🧴 Use a richer moisturizer.",
+    "moderate": "🧼 Stay hydrated; light moisturizer.",
+    "humid": "💧 Use lighter moisturizer."
   },
   "wind": {
-    "calm": "🌬️ Light wind — no special precautions.",
-    "windy": "💨 Strong winds: secure loose outdoor items and avoid tall exposed routes.",
-    "gale": "🌪️ Gale-force winds: stay indoors and avoid coastal promenades."
+    "calm": "🌬️ Light wind - no precautions.",
+    "windy": "💨 Secure loose items; avoid exposed routes.",
+    "gale": "🌪️ Stay indoors; avoid coasts."
   }
 }

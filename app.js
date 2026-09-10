@@ -128,8 +128,8 @@ async function fetchEnvironmentData() {
 
 async function getWeatherData(lat, lon) {
   try {
-    // Request additional current values: relative humidity, precipitation probability and UV index
-    let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,relativehumidity_2m,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&wind_speed_unit=kmh`;
+    // Request additional current values and hourly precipitation for timing
+    let url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,relativehumidity_2m,precipitation_probability,uv_index&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=precipitation,precipitation_probability,weathercode&forecast_days=2&timezone=auto&wind_speed_unit=kmh`;
     let response = await fetch(url);
     let data = await response.json();
     console.log({ url });
@@ -181,7 +181,32 @@ async function getWeatherData(lat, lon) {
     }
 
     await loadWeatherAdvice();
-    generateSmartAdvice(currentTemp, highTemp, lowTemp, precipitation, humidity);
+    // determine next precipitation events (up to 2) and max prob from hourly data
+    let nextPrecipEvents = [];
+    let maxPrecipProb = 0;
+    try {
+      if (data.hourly && Array.isArray(data.hourly.time)) {
+        const now = new Date();
+        const times = data.hourly.time;
+        const precips = data.hourly.precipitation || [];
+        const probs = data.hourly.precipitation_probability || [];
+        for (let i = 0; i < times.length; i++) {
+          const t = new Date(times[i]);
+          const p = Number(precips[i] || 0);
+          const prob = Math.round(Number(probs[i] || 0));
+          if (t > now && (p > 0 || prob >= 10)) {
+            nextPrecipEvents.push({ time: times[i], precip: p, prob });
+            if (nextPrecipEvents.length >= 2) break;
+          }
+          if (prob > maxPrecipProb) maxPrecipProb = prob;
+        }
+      }
+    } catch (e) {
+      console.warn('Error parsing hourly precip', e);
+    }
+
+    // Use 'feels like' temperature for advice generation; include next precip events and max probability
+    generateSmartAdvice(feelsLikeTemp, highTemp, lowTemp, precipitation, humidity, nextPrecipEvents, maxPrecipProb);
   } catch (error) {
     const adviceEl = document.getElementById("weatherAdvice");
     if (adviceEl) {
@@ -283,7 +308,7 @@ function registerServiceWorker() {
   }
 }
 
-function generateSmartAdvice(current, high, low, rain, humidity) {
+function generateSmartAdvice(current, high, low, rain, humidity, nextPrecipEvents, maxPrecipProb) {
   const alertEl = document.getElementById("weatherAlert");
   const tipsEl = document.getElementById("weatherTips");
 
@@ -355,16 +380,20 @@ function generateSmartAdvice(current, high, low, rain, humidity) {
 
     if (precipKey && weatherAdviceData.precipitation[precipKey]) {
       const p = weatherAdviceData.precipitation[precipKey];
-      if (p.travel) alertParts.push(p.travel);
-      if (p.home) alertParts.push(p.home);
-      if (p.carry) tipsParts.push(p.carry);
+      const first = (Array.isArray(nextPrecipEvents) && nextPrecipEvents[0]) || null;
+      const timeSuffix = first ? ` (at ${formatTimeValue(first.time)}${first.prob ? ', ' + first.prob + '%' : ''})` : "";
+      if (p.travel) alertParts.push(p.travel + timeSuffix);
+      if (p.home) alertParts.push(p.home + timeSuffix);
+      if (p.carry) tipsParts.push(p.carry + timeSuffix);
     }
 
     if (blackIce && weatherAdviceData.precipitation.black_ice) {
       const bi = weatherAdviceData.precipitation.black_ice;
-      if (bi.travel) alertParts.push(bi.travel);
+      const first = (Array.isArray(nextPrecipEvents) && nextPrecipEvents[0]) || null;
+      const timeSuffix = first ? ` (at ${formatTimeValue(first.time)}${first.prob ? ', ' + first.prob + '%' : ''})` : "";
+      if (bi.travel) alertParts.push(bi.travel + timeSuffix);
       if (bi.footwear) tipsParts.push(bi.footwear);
-      if (bi.home) alertParts.push(bi.home);
+      if (bi.home) alertParts.push(bi.home + timeSuffix);
     }
 
     if (alertEl) {
@@ -376,32 +405,30 @@ function generateSmartAdvice(current, high, low, rain, humidity) {
     return;
   }
 
-  // Fallback: original short advice if no JSON
+  // Fallback: shorter advice when JSON missing
   let wearText = "";
   let carryText = "";
   let alertText = "";
 
+  const first = (Array.isArray(nextPrecipEvents) && nextPrecipEvents[0]) || null;
+  const timeSuffix = first ? ` (at ${formatTimeValue(first.time)}${first.prob ? ', ' + first.prob + '%' : ''})` : "";
   if (current < 5) {
-    wearText = "🧥 Winter wear: Heavy coat, beanie, thermal layers.";
-    alertText = "⚠️ Cold alert: icy patches are possible.";
+    wearText = "🧥 Heavy coat, beanie.";
+    alertText = "⚠️ Icy patches possible." + timeSuffix;
   } else if (current >= 5 && current < 15) {
-    wearText = "🧥 Jacket / Sweater recommended.";
-    if (rain > 0) alertText = "🌧️ Rain alert: wet roads and cool conditions.";
+    wearText = "🧥 Jacket or sweater.";
+    if (rain > 0) alertText = "🌧️ Wet roads likely." + timeSuffix;
   } else if (current >= 15 && current < 22) {
-    wearText = "👕 Light jacket or hoodie.";
-    if (rain > 0) alertText = "🌧️ Rain alert: keep a light waterproof layer.";
+    wearText = "👕 Light jacket.";
+    if (rain > 0) alertText = "🌧️ Bring a light waterproof." + timeSuffix;
   } else if (current >= 22 && current < 25) {
-    wearText = "👕 Light layers and sunglasses are fine.";
+    wearText = "👕 Light layers, sunglasses.";
   } else {
-    wearText = "👕 T-shirt weather. Cap recommended if sunny.";
-    alertText = "☀️ Heatwave alert: keep cool and stay hydrated.";
+    wearText = "👕 T-shirt; stay hydrated.";
+    alertText = "☀️ Heat alert: drink water.";
   }
 
-  if (rain > 0) {
-    carryText = "🌂 Carry an umbrella (active precipitation).";
-  } else {
-    carryText = "🌂 No umbrella needed.";
-  }
+  carryText = rain > 0 ? "🌂 Bring umbrella." + timeSuffix : "🌂 No umbrella.";
 
   if (alertEl) {
     alertEl.innerHTML = alertText || "No weather alerts.";
